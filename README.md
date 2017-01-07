@@ -13,7 +13,7 @@ Example:
 
 Or running it periodically via a [crontab][crontab] entry:
 
-    */20 * * * * /path/to/heiser.py -o 
+    */20 * * * * /path/to/heiser.py -o /srv/website/heiser.xml
 
 (runs it every 20 minutes)
 
