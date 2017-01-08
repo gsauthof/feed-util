@@ -11,8 +11,8 @@ import re
 import requests
 import sys
 import time
-#import xml.etree.ElementTree as ET
-import xml.etree.cElementTree as ET
+# since Python >= 3.3 xml.etree.cElementTree is deprecated
+import xml.etree.ElementTree as ET
 
 ans = '{http://www.w3.org/2005/Atom}'
 xns = '{http://www.w3.org/1999/xhtml}'
