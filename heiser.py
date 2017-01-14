@@ -149,11 +149,12 @@ def replace_content(root, session, cache='./cache'):
 def clean_cache(cache, protected_days=7):
   for fn in os.listdir(cache):
     if fn.endswith('.heiser'):
+      filename = '{}/{}'.format(cache, fn)
       delta = (calendar.timegm(time.gmtime())
-          - os.path.getmtime('{}/{}'.format(cache, fn)) ) / 3600 / 24
+          - os.path.getmtime(filename) ) / 3600 / 24
       if delta > protected_days:
-        log.debug('Removing cached item: ' + fn)
-        os.remove(fn)
+        log.debug('Removing cached item: ' + filename)
+        os.remove(filename)
 
 def main():
   setup_logging()
