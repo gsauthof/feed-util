@@ -1,7 +1,9 @@
 This repository contains news feed related utilities.
 
-Currently, it just contains `heiser.py` - a program that augments
-the heise.de news feed with content of the referenced articles.
+- `heiser.py` - a program that augments
+the heise.de news feed with content of the referenced articles
+- `cast.py` - create a minimal audio-cast Atom feed via
+extracting the information from some HTML pages
 
 2017, Georg Sauthoff <mail@gms.tf>
 
