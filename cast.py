@@ -68,7 +68,7 @@ def gen_id(e):
       h.update(bytes(k, encoding='utf8'))
       h.update(bytes(v, encoding='utf8'))
   hex = h.hexdigest()
-  return hex
+  return 'urn:sha256:' + hex
 
 def mk_entry(l):
   entry = ET.Element(ans+'entry')
