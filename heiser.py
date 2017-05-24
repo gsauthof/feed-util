@@ -99,7 +99,8 @@ def parse_article(link, ident, cache, session):
 
 def remove_header(a):
   header = a.find(xns+'header')
-  a.remove(header)
+  if header:
+    a.remove(header)
   return a
 
 def update_urls(a, base='https://heise.de'):
