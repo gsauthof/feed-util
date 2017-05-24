@@ -106,6 +106,8 @@ def remove_header(a):
 def update_urls(a, base='https://heise.de'):
   def f(e, att):
     href = e.get(att)
+    if not href:
+      return
     if href.startswith('//'):
       e.set(att, 'https:' + href)
     elif href.startswith('/'):
