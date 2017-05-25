@@ -8,7 +8,6 @@ import argparse
 import datetime
 import hashlib
 import html5lib
-import requests
 import sys
 import xml.etree.ElementTree as ET
 
@@ -21,7 +20,6 @@ now = datetime.datetime.utcnow().isoformat()+'Z'
 updated = ET.Element(ans+'updated')
 updated.text = now
 
-session = requests.Session()
 
 def mk_arg_parser():
   p = argparse.ArgumentParser(

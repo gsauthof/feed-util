@@ -75,8 +75,7 @@ def parse_args(*a):
 def get_resource(url, session):
   log.debug('Getting: {}'.format(url))
   r = session.get(url)
-  if r.status_code != 200:
-    raise Exception(r.text)
+  r.raise_for_status()
   return r.text
 
 san_re = re.compile('[^A-Za-z0-9_-]')
@@ -103,7 +102,7 @@ def remove_header(a):
     a.remove(header)
   return a
 
-def update_urls(a, base='https://heise.de'):
+def update_urls(a, base):
   def f(e, att):
     href = e.get(att)
     if not href:
@@ -113,12 +112,14 @@ def update_urls(a, base='https://heise.de'):
     elif href.startswith('/'):
       e.set(att, base + href)
 
-  for e in a.iter(tag=xns+'a'):
-    f(e, 'href')
-  for e in a.iter(tag=xns+'img'):
-    f(e, 'src')
-  for e in a.iter(tag=xns+'iframe'):
-    f(e, 'src')
+  for e in a.iter():
+    if e.tag == xns+'a':
+      att = 'href'
+    elif e.tag == xns+'img' or e.tag == 'iframe':
+      att = 'src'
+    else:
+      continue
+    f(e, att)
 
 def extract_article(link, ident, cache, session):
   root = parse_article(link, ident, cache, session)
@@ -126,7 +127,7 @@ def extract_article(link, ident, cache, session):
       for e in root.iter(tag=xns+'meta') if e.get('name') == 'author'])
   a = next(root.iter(tag=xns+'article'))
   remove_header(a)
-  update_urls(a)
+  update_urls(a, 'https://heise.de')
   return (a, author)
 
 def replace_content(root, session, cache='./cache'):
