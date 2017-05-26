@@ -1,9 +1,11 @@
 This repository contains news feed related utilities.
 
 - `heiser.py` - a program that augments
-the heise.de news feed with content of the referenced articles
+  the heise.de news feed with content of the referenced articles
+- `lwn.py` - create an atom feed with content for lwn.net
+  articles
 - `cast.py` - create a minimal audio-cast Atom feed via
-extracting the information from some HTML pages
+  extracting the information from some HTML pages
 
 2017, Georg Sauthoff <mail@gms.tf>
 
@@ -51,8 +53,27 @@ operations. They go through a `requests.Session` object such that
 a connection is reused for multiple HTTP GET operations that
 target the same server.
 
+## `lwn.py`
+
+Similar to `heiser.py` this program creates a rich [atom][atom] feed of
+the latest [LWN.net][lwn] articles. Such a feed is optimal for
+minimal feed readers and has value even without a proper internet
+connection.
+
+In contrast to the heise situation, since lwn.net only provides
+RSS feeds, the `lwn.py` program doesn't augment anything.
+Instead, it creates the atom feed, from scratch.
+
+Besides being in a weird format and missing the article contents,
+the RSS feeds published on lwn.net usually rotate too soon. That
+means before all the latest articles are de-embargoed (lwn.net
+has a time-limited paywall for new articles).
+
 [atom]: https://en.wikipedia.org/wiki/Atom_(standard)
 [et]: https://docs.python.org/3.5/library/xml.etree.elementtree.html
 [html5lib]: https://github.com/html5lib/html5lib-python
 [requests]: http://docs.python-requests.org/en/master/
 [crontab]: https://en.wikipedia.org/wiki/Cron
+[lwn]: https://lwn.net/
+[rss]: https://en.wikipedia.org/wiki/RSS
+
