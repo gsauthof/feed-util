@@ -3,7 +3,6 @@
 # 2017, Georg Sauthoff <mail@gms.tf>, GPLv3+
 
 
-
 import argparse
 import calendar
 import datetime
@@ -94,6 +93,14 @@ def parse_next(root):
   log.debug('Found next link: ' + r)
   return r
 
+comment_re = re.compile('^[cC]omments.{1,20}$')
+
+def norm_comment(e):
+  for a in e.iter(tag=xns+'a'):
+    if comment_re.match(a.text):
+      a.text = '(Comments)'
+  return e
+
 def parse_headlines(root):
   rs = []
   for e in root.iter(tag=xns+'div'):
@@ -111,7 +118,7 @@ def parse_headlines(root):
           filter(lambda x:x.text=='Full Story', e.iter(xns+'a'))), None)
       log.debug('Full story link for {}: {}'.format(headline_str,
           (link if link else 'None')))
-      rs.append( [headline_str, e, link] )
+      rs.append( [headline_str, norm_comment(e), link] )
   next_link = parse_next(root)
   return (rs, next_link)
 
