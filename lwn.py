@@ -97,7 +97,7 @@ comment_re = re.compile('^[cC]omments.{1,20}$')
 
 def norm_comment(e):
   for a in e.iter(tag=xns+'a'):
-    if comment_re.match(a.text):
+    if a.text and comment_re.match(a.text):
       a.text = '(Comments)'
   return e
 
