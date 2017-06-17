@@ -4,6 +4,8 @@ This repository contains news feed related utilities.
   the heise.de news feed with content of the referenced articles
 - `lwn.py` - create an atom feed with content for lwn.net
   articles
+- `rss2atom.py` - convert an RSS 2 feed into an Atom one
+  and deep copy the entry links as Atom content
 - `cast.py` - create a minimal audio-cast Atom feed via
   extracting the information from some HTML pages
 
