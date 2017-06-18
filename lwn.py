@@ -221,6 +221,8 @@ def mk_entry(row, off):
   ET.SubElement(entry, ans+'id').text = gen_id(entry)
   return entry
 
+## XXX don't change feed id on content revisions ...
+## XXX replace some inserts with appends ...
 def mk_feed(rows, args):
   feed = ET.Element(ans + 'feed')
   ET.SubElement(feed, ans+'title').text = 'LWN.net'

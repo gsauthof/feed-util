@@ -130,6 +130,11 @@ def to_isodate(s):
       *t[0:6], z)
   return s
 
+def test_to_isodate():
+  assert to_isodate('Wed, 07 Jun 2017 00:00:00 +0000') == '2017-06-07T00:00:00Z'
+  assert to_isodate('Fri, 19 Aug 2016 23:21:47 +0530') == '2016-08-19T23:21:47+05:30'
+  assert to_isodate('Mon, 26 Nov 2012 03:05:12 -0200') == '2012-11-26T03:05:12-02'
+
 def item2entry(item):
   entry = ET.Element(ans+'entry')
   ET.SubElement(entry, ans+'title').text = item.find('title').text
