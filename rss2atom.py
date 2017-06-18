@@ -52,6 +52,8 @@ def mk_arg_parser():
       help='number of articles to retain')
   p.add_argument('--no-default', action='store_true',
       help="don't write default namespace")
+  p.add_argument('--force', '-f', action='store_true',
+      help='force the generation of the feed - even if it is cached')
   p.add_argument('--verbose', '-v', action='store_true',
       help='turn on verbose logging')
   return p
@@ -124,8 +126,7 @@ def to_isodate(s):
     else:
       z = '+'
     z += '{:02d}'.format(int(off/3600))
-    if off % 3600:
-      z += ':{:02d}'.format(int( (off%3600)/60 ))
+    z += ':{:02d}'.format(int( (off%3600)/60 ))
   s = '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}{}'.format(
   #    *t[0:6], z) # < -this requires Python 3.5
       *(t[0:6] + (z,)))
@@ -134,7 +135,8 @@ def to_isodate(s):
 def test_to_isodate():
   assert to_isodate('Wed, 07 Jun 2017 00:00:00 +0000') == '2017-06-07T00:00:00Z'
   assert to_isodate('Fri, 19 Aug 2016 23:21:47 +0530') == '2016-08-19T23:21:47+05:30'
-  assert to_isodate('Mon, 26 Nov 2012 03:05:12 -0200') == '2012-11-26T03:05:12-02'
+  assert to_isodate('Mon, 26 Nov 2012 03:05:12 -0200') == '2012-11-26T03:05:12-02:00'
+  assert to_isodate('Thu, 04 Aug 2016 20:32:26 -0700') == '2016-08-04T20:32:26-07:00'
 
 def item2entry(item):
   entry = ET.Element(ans+'entry')
@@ -183,7 +185,7 @@ def main(args):
   req = feed_sess.get(args.url)
   req.raise_for_status()
   log.debug(req.headers)
-  if req.from_cache:
+  if req.from_cache and not args.force:
     log.debug('Do nothing because because feed is still cached')
     return 0
   rss_feed = to_feed(req.text)
