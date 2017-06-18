@@ -127,7 +127,8 @@ def to_isodate(s):
     if off % 3600:
       z += ':{:02d}'.format(int( (off%3600)/60 ))
   s = '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}{}'.format(
-      *t[0:6], z)
+  #    *t[0:6], z) # < -this requires Python 3.5
+      *(t[0:6] + (z,)))
   return s
 
 def test_to_isodate():
