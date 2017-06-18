@@ -176,9 +176,40 @@ def enrich_content(feed, session):
     if sum(1 for _ in a.iter()) < 20:
       us = [ x.get('href') for x in a.findall('.//'+xns+'a') if x.get('href') ]
       if us and us.__len__() < 5:
-        a = to_article(get(us[0], session))
+        url = us[0]
+        a = to_article(get(url, session))
+    update_urls(a, url)
     content = entry.find(ans+'content')
     content.insert(0, a)
+
+# shared with heiser.py
+def update_urls(a, url):
+  base = base_url(url)
+  def f(e, att):
+    href = e.get(att)
+    if not href:
+      return
+    if href.startswith('//'):
+      e.set(att, 'https:' + href)
+    elif href.startswith('/'):
+      e.set(att, base + href)
+    elif '://' not in href:
+      if url.endswith('/'):
+        e.set(att, url + href)
+      else:
+        e.set(att, url + '/' + href)
+
+  for e in a.iter():
+    if e.tag == xns+'a':
+      att = 'href'
+    elif e.tag == xns+'img' or e.tag == 'iframe':
+      att = 'src'
+    else:
+      continue
+    f(e, att)
+
+def base_url(s):
+  return s[0:s.find('/', s.find('://')+3)]
 
 def main(args):
   feed_sess, article_sess = setup_sessions()
