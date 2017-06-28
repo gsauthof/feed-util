@@ -142,7 +142,7 @@ def replace_content(root, session, cache='./cache'):
     entry.remove(old_content)
     content = ET.Element(ans + 'content')
     content.set('type', 'xhtml')
-    content.insert(0, article)
+    content.append(article)
     entry.insert(i, content)
 
     author = ET.Element(ans + 'author')

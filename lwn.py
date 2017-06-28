@@ -56,6 +56,8 @@ def mk_arg_parser():
 
   p.add_argument('--output', '-o', metavar='FILE', default='feed.xml',
       help='output filename')
+  p.add_argument('--force', '-f', action='store_true',
+      help="force feed writing - even if is hasn't changed")
   p.add_argument('--no-default', action='store_true',
       help="don't write default namespace")
   return p
@@ -210,27 +212,25 @@ def updated(off=0):
 def mk_entry(row, off):
   entry = ET.Element(ans+'entry')
   ET.SubElement(entry, ans+'title').text = row[0]
-  entry.insert(100, updated(off))
+  entry.append(updated(off))
   if row[2]:
     ET.SubElement(entry, ans+'link', rel='alternate', type='text/html',
         href='https://lwn.net/' + row[2])
-  content = ET.Element(ans + 'content')
+  content = ET.SubElement(entry, ans + 'content')
   content.set('type', 'xhtml')
-  content.insert(0, row[1])
-  entry.insert(100, content)
+  content.append(row[1])
   ET.SubElement(entry, ans+'id').text = gen_id(entry)
   return entry
 
-## XXX replace some inserts with appends ...
 def mk_feed(rows, args):
   feed = ET.Element(ans + 'feed')
   ET.SubElement(feed, ans+'title').text = 'LWN.net'
   ET.SubElement(feed, ans+'link', rel='alternate', type='text/html',
       href='https://lwn.net/')
   ET.SubElement(feed, ans+'id').text = 'lwn.net'
-  feed.insert(100, updated())
+  feed.append(updated())
   for off, row in enumerate(rows):
-    feed.insert(1000, mk_entry(row, off))
+    feed.append(mk_entry(row, off))
   return ET.ElementTree(feed)
 
 def remove_header(a):
@@ -264,7 +264,7 @@ def get_ids_f(filename):
   return r
 
 def write_feed(f, args):
-  if get_ids(f) == get_ids_f(args.output):
+  if get_ids(f) == get_ids_f(args.output) and not args.force:
     log.debug('''Don't write {} because feed IDs haven't changed'''
         .format(args.output))
   else:
