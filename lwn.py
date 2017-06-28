@@ -221,19 +221,16 @@ def mk_entry(row, off):
   ET.SubElement(entry, ans+'id').text = gen_id(entry)
   return entry
 
-## XXX don't change feed id on content revisions ...
 ## XXX replace some inserts with appends ...
 def mk_feed(rows, args):
   feed = ET.Element(ans + 'feed')
   ET.SubElement(feed, ans+'title').text = 'LWN.net'
   ET.SubElement(feed, ans+'link', rel='alternate', type='text/html',
       href='https://lwn.net/')
+  ET.SubElement(feed, ans+'id').text = 'lwn.net'
   feed.insert(100, updated())
   for off, row in enumerate(rows):
     feed.insert(1000, mk_entry(row, off))
-  id = ET.Element(ans+'id')
-  id.text = gen_id(feed)
-  feed.insert(0, id)
   return ET.ElementTree(feed)
 
 def remove_header(a):
@@ -253,22 +250,22 @@ def resolve_articles(rs, args, session):
     if divs:
       r[1] = remove_header(divs[0])
 
-def get_id(t):
-  r = t.getroot().find(ans+'id').text
+def get_ids(t):
+  r = [ x.text for x in  t.getroot().findall('.//'+ans+'id') ]
   return r
 
-def get_id_f(filename):
+def get_ids_f(filename):
   if not os.path.exists(filename):
     return None
-  log.debug('Checking {} for an ID ...'.format(filename))
+  log.debug('Checking {} for IDs ...'.format(filename))
   t = ET.parse(filename)
-  r = get_id(t)
-  log.debug('Found existing ID: ' + r)
+  r = get_ids(t)
+  log.debug('Found existing IDs: ' + str(r))
   return r
 
 def write_feed(f, args):
-  if get_id(f) == get_id_f(args.output):
-    log.debug('''Don't write {} because feed ID hasn't changed'''
+  if get_ids(f) == get_ids_f(args.output):
+    log.debug('''Don't write {} because feed IDs haven't changed'''
         .format(args.output))
   else:
     log.debug('Writing {} ...'.format(args.output))
