@@ -87,7 +87,8 @@ def get_article(link, ident, cache, session):
     log.debug('Found ID {} under {}'.format(ident, cache))
     return open(filename, 'r')
   else:
-    s = get_resource(link, session)
+    url = link.split('?')[0] + '?artikelseite=all'
+    s = get_resource(url, session)
     with open(filename, 'w') as f:
       f.write(s)
     return s
