@@ -103,6 +103,31 @@ def remove_header(a):
     a.remove(header)
   return a
 
+def stack_iter(element, tag=None):
+  stack = []
+  stack.append(iter([element]))
+  es = [ None ]
+  while stack:
+    e = next(stack[-1], None)
+    es[-1] = e
+    if e == None:
+      stack.pop()
+      es.pop()
+    else:
+      stack.append(iter(e))
+      if tag == None or e.tag == tag:
+        yield (e, es)
+      es.append(None)
+
+def remove_script(a):
+  l = []
+  for e, stack in stack_iter(a):
+    if e.tag in (xns+'script', xns+'noscript'):
+      l.append( (stack[-2], e) )
+  for parent, node in l:
+    parent.remove(node)
+
+
 def update_urls(a, base):
   def f(e, att):
     href = e.get(att)
@@ -128,7 +153,10 @@ def extract_article(link, ident, cache, session):
       for e in root.iter(tag=xns+'meta') if e.get('name') == 'author'])
   a = next(root.iter(tag=xns+'article'))
   remove_header(a)
-  update_urls(a, 'https://heise.de')
+  remove_script(a)
+  i = link.index('//')
+  prefix = link[:link.index('/', i+2)]
+  update_urls(a, prefix)
   return (a, author)
 
 def replace_content(root, session, cache='./cache'):
