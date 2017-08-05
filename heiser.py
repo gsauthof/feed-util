@@ -147,11 +147,19 @@ def update_urls(a, base):
       continue
     f(e, att)
 
+def find_article(root):
+  for a in root.iter():
+    if a.tag == xns+'article':
+      return a
+    if a.tag == xns+'div' and 'article_page' in a.get('class', ''):
+      return a
+  raise RuntimeError("Couldn't find any article element")
+
 def extract_article(link, ident, cache, session):
   root = parse_article(link, ident, cache, session)
   author = ', '.join([ e.get('content')
       for e in root.iter(tag=xns+'meta') if e.get('name') == 'author'])
-  a = next(root.iter(tag=xns+'article'))
+  a = find_article(root)
   remove_header(a)
   remove_script(a)
   i = link.index('//')
