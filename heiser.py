@@ -147,13 +147,16 @@ def update_urls(a, base):
       continue
     f(e, att)
 
+class No_Article_Error(Exception):
+  pass
+
 def find_article(root):
   for a in root.iter():
     if a.tag == xns+'article':
       return a
     if a.tag == xns+'div' and 'article_page' in a.get('class', ''):
       return a
-  raise RuntimeError("Couldn't find any article element")
+  raise No_Article_Error("Couldn't find any article element")
 
 def extract_article(link, ident, cache, session):
   root = parse_article(link, ident, cache, session)
@@ -173,7 +176,12 @@ def replace_content(root, session, cache='./cache'):
     href = link.get('href')
     ident = entry.find(ans + 'id')
     log.debug('Inserting {} (ID: {})'.format(href, ident.text))
-    (article, author_s) = extract_article(href, ident.text, cache, session)
+    try:
+      (article, author_s) = extract_article(href, ident.text, cache, session)
+    except No_Article_Error as e:
+      log.debug('Not modifying entry: {}'.format(e))
+      continue
+
     old_content = entry.find(ans + 'content')
     i = entry.getchildren().index(old_content)
     entry.remove(old_content)
