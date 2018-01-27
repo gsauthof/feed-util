@@ -239,6 +239,31 @@ def remove_header(a):
     a.remove(header)
   return a
 
+def test_well_form_anchors():
+  inp = '''<p>The discrete tuples, consisting of frequency and voltage pairs,
+that the device supports are called &quot;operating performance
+points&quot; (OPPs). These were explained in detail in
+<a href="/Articles/718632/"</a>this article</a>.
+<p>
+'''
+  d = html5lib.parse(inp)
+  a = d.findall('./'+xns+'body/'+xns+'p/'+xns+'a')[0]
+  assert sorted(a.attrib.keys()) == [ '<', 'a', 'href' ]
+  well_form_anchors(d)
+  a = d.findall('./'+xns+'body/'+xns+'p/'+xns+'a')[0]
+  assert sorted(a.attrib.keys()) == [ 'href' ]
+
+
+def well_form_anchors(tree):
+  for a in tree.iter(tag=xns+'a'):
+    keys = list(a.attrib.keys())
+    for key in keys:
+      if key not in set(( 'href', 'name', 'rel', 'rev', 'urn', 'title',
+        'methods', 'id', 'download', 'hreflang', 'ping', 'referrerpolicy',
+        'target', 'type')):
+        a.attrib.pop(key)
+
+
 def resolve_articles(rs, args, session):
   for r in rs:
     if not r[2]:
@@ -249,6 +274,7 @@ def resolve_articles(rs, args, session):
     divs = d.findall('.//'+xns+'div[@class="ArticleText"]')
     if divs:
       r[1] = remove_header(divs[0])
+      well_form_anchors(r[1])
 
 def get_ids(t):
   r = [ x.text for x in  t.getroot().findall('.//'+ans+'id') ]
