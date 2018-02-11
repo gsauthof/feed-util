@@ -7,6 +7,7 @@ import datetime
 import logging
 import os
 import sys
+import re
 from distutils.version import LooseVersion
 import email.utils
 
@@ -107,8 +108,13 @@ def to_feed(s):
   return d
 
 def to_article(s):
+  # fix non-conforming html where <mail@example.org> isn't escaped
+  s = re.sub('<([a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+)>', '&lt;\\1&gt;', s)
   d = html5lib.parse(s, default_treebuilder)
   xs = d.findall('.//'+xns+'article')
+  if xs:
+    return xs[0]
+  xs = d.findall('.//'+xns+'div[@class="post"]')
   if xs:
     return xs[0]
   xs = d.findall('.//'+xns+'body')
