@@ -56,6 +56,10 @@ def mk_arg_parser():
       help='force the generation of the feed - even if it is cached')
   p.add_argument('--verbose', '-v', action='store_true',
       help='turn on verbose logging')
+  p.add_argument('--fetch', action='store_true', default=True,
+      help='replace entry content with fetched content (default: fetch)')
+  p.add_argument('--no-fetch', action='store_false', dest='fetch',
+      help='replace entry content with fetched content (default: fetch)')
   return p
 
 def parse_args(*a):
@@ -138,16 +142,21 @@ def test_to_isodate():
   assert to_isodate('Mon, 26 Nov 2012 03:05:12 -0200') == '2012-11-26T03:05:12-02:00'
   assert to_isodate('Thu, 04 Aug 2016 20:32:26 -0700') == '2016-08-04T20:32:26-07:00'
 
-def item2entry(item):
+def item2entry(item, url, use_description):
   entry = ET.Element(ans+'entry')
   ET.SubElement(entry, ans+'title').text = item.find('title').text
   ET.SubElement(entry, ans+'id').text = item.find('guid').text
   ET.SubElement(entry, ans+'updated').text = to_isodate(
       item.find('pubDate').text)
-  url = item.find('link').text
-  ET.SubElement(entry, ans+'link', rel='alternate', type='text/html',
-      href=url)
+  link_url = item.find('link').text
+  link = ET.SubElement(entry, ans+'link', rel='alternate', type='text/html',
+      href=link_url)
+  update_urls(link, url)
   content = ET.SubElement(entry, ans+'content', type='xhtml')
+  if use_description:
+    a = ET.SubElement(content, ans+'article')
+    a.append(html5lib.parse(item.find('description').text, default_treebuilder))
+    update_urls(a, url)
   return entry
 
 now = datetime.datetime.utcnow()
@@ -157,7 +166,7 @@ def updated(off=0):
   updated.text = (now - datetime.timedelta(hours=off)).isoformat()+'Z'
   return updated
 
-def rss2atom(rss_feed, n):
+def rss2atom(rss_feed, url, use_description, n):
   channel = rss_feed.find('channel')
   feed = ET.Element(ans + 'feed')
   ET.SubElement(feed, ans+'title').text = channel.find('title').text
@@ -166,7 +175,7 @@ def rss2atom(rss_feed, n):
   ET.SubElement(feed, ans+'id').text = channel.find('link').text
   feed.append(updated())
   for _, item in zip(range(n), channel.findall('.//item')):
-    feed.append(item2entry(item))
+    feed.append(item2entry(item, url, use_description))
   return ET.ElementTree(feed)
 
 def enrich_content(feed, session):
@@ -191,7 +200,7 @@ def update_urls(a, url):
       return
     if href.startswith('//'):
       e.set(att, 'https:' + href)
-    elif href.startswith('/'):
+    elif href.startswith('/') or href.startswith('./'):
       e.set(att, base + href)
     elif '://' not in href:
       if url.endswith('/'):
@@ -202,8 +211,10 @@ def update_urls(a, url):
   for e in a.iter():
     if e.tag == xns+'a':
       att = 'href'
-    elif e.tag == xns+'img' or e.tag == 'iframe':
+    elif e.tag == xns+'img':
       att = 'src'
+    elif e.tag == ans+'link':
+      att = 'href'
     else:
       continue
     f(e, att)
@@ -220,8 +231,9 @@ def main(args):
     log.debug('Do nothing because because feed is still cached')
     return 0
   rss_feed = to_feed(req.text)
-  feed = rss2atom(rss_feed, args.limit)
-  enrich_content(feed, article_sess)
+  feed = rss2atom(rss_feed, args.url, not args.fetch, args.limit)
+  if args.fetch:
+    enrich_content(feed, article_sess)
   feed.write(args.output)
   return 0
 
