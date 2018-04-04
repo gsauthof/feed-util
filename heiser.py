@@ -217,7 +217,7 @@ def main():
   else:
     d = ET.ElementTree(ET.fromstring(get_resource(args.feed_url, session)))
   replace_content(d, session, cache=args.cache)
-  log.info('Writing augemented feed to: ' + args.output)
+  log.info('Writing augmented feed to: ' + args.output)
   d.write(args.output)
 
 if __name__ == '__main__':
