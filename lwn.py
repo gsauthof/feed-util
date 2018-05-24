@@ -193,6 +193,8 @@ def gen_id(e):
   for x in e.iter():
     if x.tag == ans+'updated':
       continue
+    if type(x.tag) is not str:
+      continue
     h.update(bytes(x.tag, encoding='utf8'))
     if x.text:
       h.update(bytes(x.text, encoding='utf8'))
@@ -210,6 +212,7 @@ def updated(off=0):
   return updated
 
 def mk_entry(row, off):
+  log.debug('Making entry for: {} - {}'.format(row[0], row[2]))
   entry = ET.Element(ans+'entry')
   ET.SubElement(entry, ans+'title').text = row[0]
   entry.append(updated(off))
