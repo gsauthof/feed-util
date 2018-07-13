@@ -127,6 +127,13 @@ def remove_script(a):
   for parent, node in l:
     parent.remove(node)
 
+def remove_footer(a):
+  # including iframe with whatsapp/facebook etc. boilerplate
+  footer = a.find(xns+'footer')
+  if not footer:
+      return
+  if footer:
+    a.remove(footer)
 
 def update_urls(a, base):
   def f(e, att):
@@ -165,6 +172,7 @@ def extract_article(link, ident, cache, session):
   a = find_article(root)
   remove_header(a)
   remove_script(a)
+  remove_footer(a)
   i = link.index('//')
   prefix = link[:link.index('/', i+2)]
   update_urls(a, prefix)
