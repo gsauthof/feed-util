@@ -157,6 +157,21 @@ def update_urls(a, base):
       continue
     f(e, att)
 
+# work around html5lib parses that contain invalid characters
+# in attribute names. Example HTML input:
+#   <a href="/thema/Missing-Link"
+#   title="Mehr zum Feuilleton "Missing Link"">
+#     Mehr zum Feuilleton "Missing Link"
+#   </a>
+def fix_attributes(a):
+    for e in a.iter():
+        ks = []
+        for k, v in e.attrib.items():
+            if '"' in k:
+                ks.append(k)
+        for k in ks:
+            e.attrib.pop(k)
+
 class No_Article_Error(Exception):
   pass
 
@@ -179,6 +194,7 @@ def extract_article(link, ident, cache, session):
   i = link.index('//')
   prefix = link[:link.index('/', i+2)]
   update_urls(a, prefix)
+  fix_attributes(a)
   return (a, author)
 
 def replace_content(root, session, cache='./cache'):
