@@ -120,12 +120,16 @@ def stack_iter(element, tag=None):
       es.append(None)
 
 # and facebook/twitter/... share boilerplate
+# and static ads
 def remove_script(a):
   l = []
   for e, stack in stack_iter(a):
     if e.tag in (xns+'script', xns+'noscript'):
       l.append( (stack[-2], e) )
     elif e.tag == xns+'div' and 'shariff' in e.get('class', ''):
+      l.append( (stack[-2], e) )
+    elif ((e.tag in (xns+'div', xns+'aside'))
+            and '-ad-container' in e.get('class', '')):
       l.append( (stack[-2], e) )
   for parent, node in l:
     parent.remove(node)
