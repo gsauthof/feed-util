@@ -157,6 +157,10 @@ def update_urls(a, base):
       continue
     f(e, att)
 
+
+def str_contains(s, xs):
+    return any(x in s for x in xs)
+
 # work around html5lib parses that contain invalid characters
 # in attribute names. Example HTML input:
 #   <a href="/thema/Missing-Link"
@@ -167,7 +171,7 @@ def fix_attributes(a):
     for e in a.iter():
         ks = []
         for k, v in e.attrib.items():
-            if '"' in k:
+            if str_contains(k, ('"', ',', '!', '?', '-')):
                 ks.append(k)
         for k in ks:
             e.attrib.pop(k)
