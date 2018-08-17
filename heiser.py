@@ -16,6 +16,8 @@ import xml.etree.ElementTree as ET
 
 ans = '{http://www.w3.org/2005/Atom}'
 xns = '{http://www.w3.org/1999/xhtml}'
+# reserved namespace, must not be declared
+xmlns = '{http://www.w3.org/2000/xmlns/}'
 
 # just for writing
 ET.register_namespace('atom', 'http://www.w3.org/2005/Atom')
@@ -183,6 +185,16 @@ def fix_attributes(a):
         for k in ks:
             e.attrib.pop(k)
 
+def fix_xmlns(a):
+    for e in a.iter():
+        xs = []
+        for k, v in e.attrib.items():
+            if k == xmlns + 'xmlns':
+                xs.append((k, v))
+        for k, v in xs:
+            e.attrib.pop(k)
+            a.attrib['xmlns'] = v
+
 class No_Article_Error(Exception):
   pass
 
@@ -206,6 +218,7 @@ def extract_article(link, ident, cache, session):
   prefix = link[:link.index('/', i+2)]
   update_urls(a, prefix)
   fix_attributes(a)
+  fix_xmlns(a)
   return (a, author)
 
 def replace_content(root, session, cache='./cache'):
