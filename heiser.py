@@ -99,11 +99,6 @@ def parse_article(link, ident, cache, session):
   o = get_article(link, ident, cache, session)
   return html5lib.parse(o)
 
-def remove_header(a):
-  header = a.find(xns+'header')
-  if header:
-    a.remove(header)
-  return a
 
 def stack_iter(element, tag=None):
   stack = []
@@ -131,6 +126,10 @@ def remove_script(a):
       l.append( (stack[-2], e) )
     elif e.tag == xns+'div' and 'shariff' in e.get('class', ''):
       l.append( (stack[-2], e) )
+    elif e.tag == xns+'div' and 'creator' in e.get('class', ''):
+      l.append( (stack[-2], e) )
+    elif e.tag == xns+'footer':
+      l.append( (stack[-2], e) )
     elif ((e.tag in (xns+'div', xns+'aside'))
             and '-ad-container' in e.get('class', '')):
       l.append( (stack[-2], e) )
@@ -138,14 +137,6 @@ def remove_script(a):
       l.append( (stack[-2], e) )
   for parent, node in l:
     parent.remove(node)
-
-def remove_footer(a):
-  # including iframe with whatsapp/facebook etc. boilerplate
-  footer = a.find(xns+'footer')
-  if not footer:
-      return
-  if footer:
-    a.remove(footer)
 
 def update_urls(a, base):
   def f(e, att):
@@ -211,9 +202,7 @@ def extract_article(link, ident, cache, session):
   author = ', '.join([ e.get('content')
       for e in root.iter(tag=xns+'meta') if e.get('name') == 'author'])
   a = find_article(root)
-  remove_header(a)
   remove_script(a)
-  remove_footer(a)
   i = link.index('//')
   prefix = link[:link.index('/', i+2)]
   update_urls(a, prefix)
