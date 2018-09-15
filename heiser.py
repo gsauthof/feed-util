@@ -130,10 +130,22 @@ def remove_script(a):
       l.append( (stack[-2], e) )
     elif e.tag == xns+'footer':
       l.append( (stack[-2], e) )
+    elif e.tag == xns+'div' and 'footer' in e.get('class', ''):
+      l.append( (stack[-2], e) )
+    elif e.tag == xns+'header':
+      l.append( (stack[-2], e) )
+    elif e.tag == xns+'p' and 'article_page_category' in e.get('class', ''):
+      l.append( (stack[-2], e) )
+    elif e.tag == xns+'ul' and 'article_page_info' in e.get('class', ''):
+      l.append( (stack[-2], e) )
     elif ((e.tag in (xns+'div', xns+'aside'))
             and '-ad-container' in e.get('class', '')):
       l.append( (stack[-2], e) )
+    elif e.tag == xns+'div' and '-ad-' in e.get('id', ''):
+      l.append( (stack[-2], e) )
     elif str(e.tag).startswith(xns+'a-'):
+      l.append( (stack[-2], e) )
+    elif e.tag == xns+'a' and 'a-button' in e.get('class', ''):
       l.append( (stack[-2], e) )
   for parent, node in l:
     parent.remove(node)
