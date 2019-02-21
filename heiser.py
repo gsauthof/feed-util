@@ -233,6 +233,9 @@ def replace_content(root, session, cache='./cache'):
         except No_Article_Error as e:
             log.debug('Not modifying entry: {}'.format(e))
             continue
+        except requests.exceptions.HTTPError as e:
+            log.debug('Not modifying entry due to HTTP error: {}'.format(e))
+            continue
 
         old_content = entry.find(ans + 'content')
         i = entry.getchildren().index(old_content)
