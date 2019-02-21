@@ -238,7 +238,7 @@ def replace_content(root, session, cache='./cache'):
             continue
 
         old_content = entry.find(ans + 'content')
-        i = entry.getchildren().index(old_content)
+        i = list(entry).index(old_content)
         entry.remove(old_content)
         content = ET.Element(ans + 'content')
         content.set('type', 'xhtml')
