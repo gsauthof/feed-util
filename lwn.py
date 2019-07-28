@@ -266,6 +266,32 @@ def well_form_anchors(tree):
         'target', 'type')):
         a.attrib.pop(key)
 
+def test_well_form_attrs():
+    inp = '''           <div class="FeatureByline">
+           By <b>Jonathan Corbet</b><br>July 12, 2019
+           </div>
+As of this writing, exactly 6,666 non-merge changesets have been pulled
+into the mainline repository for the 5.3 development cycle.  The merge
+window has thus just begun, there is still quite a bit in the way of
+interesting changes to look at.  Read on for a list of what has been merged
+so far.
+<br clear="all"
+<p>
+'''
+    d = html5lib.parse(inp)
+    a = d.findall('./'+xns+'body/'+xns+'br')[0]
+    assert sorted(a.attrib.keys()) == [ '<p', 'clear' ]
+    well_form_attrs(d)
+    a = d.findall('./'+xns+'body/'+xns+'br')[0]
+    assert sorted(a.attrib.keys()) == [ 'clear' ]
+
+def well_form_attrs(tree):
+  for a in tree.iter():
+    keys = list(a.attrib.keys())
+    for key in keys:
+        if key.startswith('<'):
+            a.attrib.pop(key)
+
 
 def resolve_articles(rs, args, session):
   for r in rs:
@@ -278,6 +304,7 @@ def resolve_articles(rs, args, session):
     if divs:
       r[1] = remove_header(divs[0])
       well_form_anchors(r[1])
+      well_form_attrs(r[1])
 
 def get_ids(t):
   r = [ x.text for x in  t.getroot().findall('.//'+ans+'id') ]
