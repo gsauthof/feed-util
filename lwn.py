@@ -55,7 +55,7 @@ def mk_arg_parser():
       help='alternative to --url - when files are already loaded')
 
   p.add_argument('--output', '-o', metavar='FILE', default='feed.xml',
-      help='output filename')
+      help='output filename (default: %(default)s)')
   p.add_argument('--force', '-f', action='store_true',
       help="force feed writing - even if is hasn't changed")
   p.add_argument('--no-default', action='store_true',

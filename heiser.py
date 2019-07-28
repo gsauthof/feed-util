@@ -53,12 +53,11 @@ def mk_arg_parser():
         help='read feed from a FILE instead the URL')
     p.add_argument('--feed-url',
         default=default_heise_feed_url,
-        help='URL of the heise.de ATOM news feed (default: {})'
-                 .format(default_heise_feed_url))
+        help='URL of the heise.de ATOM news feed (default: %(default)s)')
     p.add_argument('--log', nargs='?', metavar='FILE',
         const='heiser.log', help='log all messages into FILE')
     p.add_argument('--output', '-o', metavar='FILE', default='heiser.xml',
-        help='augmented ATOM feed (default: heiser.xml)')
+        help='augmented ATOM feed (default: %(default)s)')
     p.add_argument('--verbose', '-v', action='store_true',
         help='turn on verbose logging')
     return p
