@@ -143,7 +143,10 @@ def remove_script(a):
         elif e.tag == xns+'div' and '-ad-' in e.get('id', ''):
             l.append( (stack[-2], e) )
         elif str(e.tag).startswith(xns+'a-'):
-            l.append( (stack[-2], e) )
+            if e.tag == xns+'a-img':
+                e.tag = xns+'img'
+            else:
+                l.append( (stack[-2], e) )
         elif e.tag == xns+'a' and 'a-button' in e.get('class', ''):
             l.append( (stack[-2], e) )
     for parent, node in l:
