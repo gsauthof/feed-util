@@ -285,11 +285,25 @@ so far.
     a = d.findall('./'+xns+'body/'+xns+'br')[0]
     assert sorted(a.attrib.keys()) == [ 'clear' ]
 
+def test_well_form_attrs2():
+    inp = '''
+<a href="/Articles/799490/"><img
+src="https://static.lwn.net/images/conf/2019/lpc/Defossez-Pillai-sm.jpg" alt="[Julien Desfossez,
+Vineeth Remanan Pillai]"
+title="Julien Desfossez, Vineeth Remanan Pillai", class="lthumb"></a>
+'''
+    d = html5lib.parse(inp)
+    a = d.findall('./'+xns+'body/'+xns+'a/'+xns+'img')[0]
+    assert sorted(a.attrib.keys()) == [',', 'alt', 'class', 'src', 'title']
+    well_form_attrs(d)
+    a = d.findall('./'+xns+'body/'+xns+'a/'+xns+'img')[0]
+    assert sorted(a.attrib.keys()) == ['alt', 'class', 'src', 'title']
+
 def well_form_attrs(tree):
   for a in tree.iter():
     keys = list(a.attrib.keys())
     for key in keys:
-        if key.startswith('<'):
+        if key and key[0] in ('<', ','):
             a.attrib.pop(key)
 
 
