@@ -60,6 +60,9 @@ def mk_arg_parser():
         help='augmented ATOM feed (default: %(default)s)')
     p.add_argument('--verbose', '-v', action='store_true',
         help='turn on verbose logging')
+    p.add_argument('--filter', help=('Filter entries based on the title'
+        ' (i.e. no ads/TechStage/heise+) (default: %(default)s)'), nargs=1,
+        default='Anzeige:|TechStage|heise\\+')
     return p
 
 def parse_args(*a):
@@ -152,6 +155,21 @@ def remove_script(a):
         # i.e. match double-click ads <html:aside class="teaser ad-microsites">
         elif e.tag == xns+'aside' and 'teaser' in e.get('class', ''):
             l.append( (stack[-2], e) )
+    for parent, node in l:
+        parent.remove(node)
+
+def remove_entries(d, expr):
+    if not expr:
+        return
+    ex = re.compile(expr)
+    l = []
+    log.debug('Filtering titles ...')
+    for e, stack in stack_iter(d):
+        if e.tag == ans+'entry':
+            t = e.find(ans+'title')
+            if ex.match(t.text):
+                log.debug('Removing entry because of its title: {}'.format(t.text))
+                l.append( (stack[-2], e) )
     for parent, node in l:
         parent.remove(node)
 
@@ -277,6 +295,7 @@ def main():
     else:
         d = ET.ElementTree(ET.fromstring(get_resource(args.feed_url, session)))
     replace_content(d, session, cache=args.cache)
+    remove_entries(d.getroot(), args.filter)
     log.info('Writing augmented feed to: ' + args.output)
     d.write(args.output)
 
