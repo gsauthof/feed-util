@@ -149,6 +149,9 @@ def remove_script(a):
                 l.append( (stack[-2], e) )
         elif e.tag == xns+'a' and 'a-button' in e.get('class', ''):
             l.append( (stack[-2], e) )
+        # i.e. match double-click ads <html:aside class="teaser ad-microsites">
+        elif e.tag == xns+'aside' and 'teaser' in e.get('class', ''):
+            l.append( (stack[-2], e) )
     for parent, node in l:
         parent.remove(node)
 
