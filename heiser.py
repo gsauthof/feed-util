@@ -155,6 +155,9 @@ def remove_script(a):
         # i.e. match double-click ads <html:aside class="teaser ad-microsites">
         elif e.tag == xns+'aside' and 'teaser' in e.get('class', ''):
             l.append( (stack[-2], e) )
+        # i.e. match class="ad-microsites__item"
+        elif e.get('class', '').startswith('ad-'):
+            l.append( (stack[-2], e) )
     for parent, node in l:
         parent.remove(node)
 
