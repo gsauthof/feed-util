@@ -9,6 +9,7 @@ URL:        https://github.com/gsauthof/feed-util
 License:    GPLv3+
 Source:     https://example.org/feed-utils.tar
 
+BuildArch:  noarch
 
 Requires:   python3-CacheControl
 Requires:   python3-html5lib
