@@ -74,8 +74,8 @@ def mk_entry(l):
   entry.insert(100, updated)
   ET.SubElement(entry, ans+'link', rel='alternate', type='text/html',
     href=l[1])
-  ET.SubElement(entry, ans+'link', rel='enclosure', type='audio/mpeg',
-      href=l[0])
+  t = 'audio/ogg; codecs=opus' if l[0].endswith('.opus') else 'audio/mpeg'
+  ET.SubElement(entry, ans+'link', rel='enclosure', type=t, href=l[0])
   ET.SubElement(entry, ans+'id').text = gen_id(entry)
   return entry
 
@@ -84,9 +84,9 @@ def mk_feed(ls, args):
   ET.SubElement(feed, ans+'title').text = args.title
   ET.SubElement(feed, ans+'link', rel='alternate', type='text/html',
     href=args.site)
-  feed.insert(100, updated)
+  feed.append(updated)
   for l in ls:
-    feed.insert(1000, mk_entry(l))
+    feed.append(mk_entry(l))
   id = ET.Element(ans+'id')
   id.text = gen_id(feed)
   feed.insert(0, id)
