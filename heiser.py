@@ -118,6 +118,12 @@ def stack_iter(element, tag=None):
                 yield (e, es)
             es.append(None)
 
+def oneof_in(qs, t):
+    for q in qs:
+        if q in t:
+            return True
+    return False
+
 # and facebook/twitter/... share boilerplate
 # and static ads
 # and custom tags
@@ -140,8 +146,10 @@ def remove_script(a):
             l.append( (stack[-2], e) )
         elif e.tag == xns+'ul' and 'article_page_info' in e.get('class', ''):
             l.append( (stack[-2], e) )
-        elif ((e.tag in (xns+'div', xns+'aside'))
-                and '-ad-container' in e.get('class', '')):
+        # i.e. match double-click ads <html:aside class="teaser ad-microsites">
+        # and similar
+        elif (e.tag in (xns+'div', xns+'aside')
+                and oneof_in(('-ad-container', 'img-ad', 'teaser', 'newsletter-subscription'), e.get('class', '')) ):
             l.append( (stack[-2], e) )
         elif e.tag == xns+'div' and '-ad-' in e.get('id', ''):
             l.append( (stack[-2], e) )
@@ -151,9 +159,6 @@ def remove_script(a):
             else:
                 l.append( (stack[-2], e) )
         elif e.tag == xns+'a' and 'a-button' in e.get('class', ''):
-            l.append( (stack[-2], e) )
-        # i.e. match double-click ads <html:aside class="teaser ad-microsites">
-        elif e.tag == xns+'aside' and 'teaser' in e.get('class', ''):
             l.append( (stack[-2], e) )
         # i.e. match class="ad-microsites__item" or
         # <html:aside class="us-ad">
