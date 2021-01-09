@@ -2,7 +2,7 @@
 
 
 Name:       feed-utils
-Version:    0.5.0
+Version:    0.5.1
 Release:    1%{?dist}
 Summary:    Collection of RSS/Atom utilities
 URL:        https://github.com/gsauthof/feed-util
@@ -42,6 +42,10 @@ cp rss2atom.py %{buildroot}/usr/bin/rss2atom
 
 
 %changelog
+* Sat Jan 09 2021 Georg Sauthoff <mail@gms.tf> - 0.5.0-1
+- fix lwn headline parsing
+- remove latest heiser junk
+
 * Sun Sep 06 2020 Georg Sauthoff <mail@gms.tf> - 0.5.0-1
 - initial packaging
 
