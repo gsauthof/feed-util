@@ -108,7 +108,8 @@ def norm_comment(e):
 
 def parse_headlines(root):
     rs = []
-    for e in root.iter(tag=xns + 'div'):
+    last_headline = None
+    for e in root.iter():
         klasse = e.get('class')
         if not klasse:
             continue
@@ -117,7 +118,7 @@ def parse_headlines(root):
                 last_headline = None
             else:
                 last_headline = e
-        elif klasse == 'BlurbListing' and last_headline:
+        elif e.tag == xns+'div' and klasse == 'BlurbListing' and last_headline is not None:
             headline_str = ' '.join(last_headline.itertext())
             link = next(map(lambda x: x.get('href'),
                             filter(lambda x: x.text == 'Full Story', e.iter(xns + 'a'))), None)
@@ -234,8 +235,9 @@ def mk_entry(row, off):
     ET.SubElement(entry, ans + 'title').text = row[0]
     entry.append(updated(off))
     if row[2]:
+        x = row[2][1:] if row[2].startswith('/') else row[2]
         ET.SubElement(entry, ans + 'link', rel='alternate', type='text/html',
-                      href='https://lwn.net/' + row[2])
+                      href='https://lwn.net/' + x)
     content = ET.SubElement(entry, ans + 'content')
     content.set('type', 'xhtml')
     content.append(row[1])
