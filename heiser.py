@@ -235,7 +235,7 @@ class No_Article_Error(Exception):
 
 def find_article(root):
     for a in root.iter():
-        if a.tag == xns+'article':
+        if a.tag == xns+'article' and a.get('id', None) == 'meldung':
             return a
         if a.tag == xns+'div' and 'article_page' in a.get('class', ''):
             return a

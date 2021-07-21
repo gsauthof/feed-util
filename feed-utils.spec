@@ -2,7 +2,7 @@
 
 
 Name:       feed-utils
-Version:    0.5.1
+Version:    0.5.2
 Release:    1%{?dist}
 Summary:    Collection of RSS/Atom utilities
 URL:        https://github.com/gsauthof/feed-util
