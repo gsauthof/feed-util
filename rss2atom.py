@@ -8,7 +8,6 @@ import logging
 import os
 import sys
 import re
-from distutils.version import LooseVersion
 import email.utils
 
 import html5lib
@@ -22,7 +21,7 @@ import requests
 # note that 0.11.5 has a bug in the ExpiresAge heuristics
 # we need >= 0.12.3
 import cachecontrol
-assert LooseVersion(cachecontrol.__version__) >= LooseVersion('0.12.3')
+assert tuple(int(x) for x in cachecontrol.__version__.split('.')) >= (0, 12, 3)
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
 import cachecontrol.heuristics
