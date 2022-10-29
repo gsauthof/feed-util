@@ -114,7 +114,7 @@ def parse_headlines(root):
         if not klasse:
             continue
         if klasse == 'Headline':
-            if e.findall('.//' + xns + 'font[@class="Subscription"]'):
+            if e.findall('.//' + xns + 'span[@class="Subscription"]'):
                 last_headline = None
             else:
                 last_headline = e
