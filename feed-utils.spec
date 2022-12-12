@@ -32,7 +32,7 @@ mkdir -p %{buildroot}/usr/bin
 cp heiser.py %{buildroot}/usr/bin/heiser
 cp lwn.py %{buildroot}/usr/bin/lwn
 cp rss2atom.py %{buildroot}/usr/bin/rss2atom
-cp betterflix.py %{buildroot}/usr/bin/rss2atom
+cp betterflix.py %{buildroot}/usr/bin/betterflix
 
 
 %check
