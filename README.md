@@ -8,6 +8,8 @@ This repository contains news feed related utilities.
   and deep copy the entry links as Atom content
 - `cast.py` - create a minimal audio-cast Atom feed via
   extracting the information from some HTML pages
+- `betterflix.py` - create atom feed of newly added Neflix/Prime
+  movies that don't have a poor IMDB score
 
 2017, Georg Sauthoff <mail@gms.tf>
 
@@ -71,6 +73,62 @@ the RSS feeds published on lwn.net usually rotate too soon. That
 means before all the latest articles are de-embargoed (lwn.net
 has a time-limited paywall for new articles).
 
+## `betterflix.py`
+
+Netflix more and more develops into a dumping ground for low
+quality movies and series. In addition, it comes with a horrible
+UI that doesn't allow to filter the content in any meaningful
+way. For example, it isn't even possible to filter for just
+movies, to exclude movies one has downvoted, one has already
+watched or to exclude movies made by certain directors one
+dislikes.
+
+It also doesn't help that Netflix completely fails to come up
+with a good recommendation system. FWIW, I rated hundreds of
+movies on Netflix (good and bad ones) and it doesn't make a
+difference. The Netflix system still stubbornly suggests me the
+most garbage movies and includes negatively rated movies in all
+of their automatically 'curated' categories.
+
+I thus created `betterflix.py`, a small script that fetches a
+list of movies newly added by Netflix (or Prime) from the German
+[wer-streamt.es][wse] service, fetches the [IMDB][imdb] score of
+each movie and only selects movies with a score above a threshold
+(say 6.5) into an [Atom][atom] feed.
+
+Of course, using the IMDB score isn't perfect, but in my
+experience it works surprisingly well - at least as a first
+filter. Perhaps there is less fake reviewing happening on IMDB
+than - say - on Amazon (for products), although IMDB is nowadays
+also owned by Amazon.
+
+One exception I noticed is when a popular Hollywood actor
+switches the usual pattern and participates in an independent art
+house production. In those cases a high quality movie might get
+an unusual bad IMDB score because suddenly a crowd of fans that
+are used to mainstream genres watch something completely
+different (because their favourite actor stars in it) and might
+be easily frustrated.
+
+### Example Usage
+
+Create an atom feed for new releases on Netflix:
+
+    ./betterflix.py -o net-flix.xml
+
+Create a similar feed for movies recently added to Amazon Prime:
+
+    ./betterflix.py --prime -o prime-flix.xml
+
+Use a different filter threshold (greater or equal):
+
+    ./betterflix.py --thresh 7.1 -o net-flix.xml
+
+As always, one can add such a call to a crontab on your private
+web server such that your private feed is updated once a day,
+for consumption by a mobile device.
+
+
 [atom]: https://en.wikipedia.org/wiki/Atom_(standard)
 [et]: https://docs.python.org/3.5/library/xml.etree.elementtree.html
 [html5lib]: https://github.com/html5lib/html5lib-python
@@ -78,4 +136,6 @@ has a time-limited paywall for new articles).
 [crontab]: https://en.wikipedia.org/wiki/Cron
 [lwn]: https://lwn.net/
 [rss]: https://en.wikipedia.org/wiki/RSS
+[wse]: https://www.werstreamt.es
+[imdb]: https://en.wikipedia.org/wiki/IMDb
 
