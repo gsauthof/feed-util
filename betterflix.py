@@ -204,7 +204,10 @@ def read_wse_feed(args, c):
             continue
         f = cached_download(c, l, args.cache)
         d = parse_imdb_rating(f)
-        score = decimal.Decimal(d['aggregateRating']['ratingValue'])
+        if 'aggregateRating' in d:
+            score = decimal.Decimal(d['aggregateRating']['ratingValue'])
+        else:
+            score = decimal.Decimal(0)
 
         if score >= args.thresh:
             if d['url'] not in h['imdb']:
