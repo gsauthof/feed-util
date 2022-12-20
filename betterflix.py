@@ -216,7 +216,8 @@ def read_wse_feed(args, c):
                 h['imdb'][d['url']] = d
             director = d['director'][0]['name'] if 'director' in d else ''
             genre    = ', '.join(d.get('genre', []))
-            log.debug(f'Selected: {d["name"]} ({score}, {d["datePublished"]}) - {director}, {genre}')
+            pub      = d.get('datePublished', 'unk-pub-date')
+            log.debug(f'Selected: {d["name"]} ({score}, {pub}) - {director}, {genre}')
     if changed:
         h['mtime'] = now_str
     write_feed_cache(args.cache, args.tag, h)
@@ -239,7 +240,7 @@ def mk_feed(h, tag):
         ET.SubElement(entry, ans + 'id').text      = url
         cont = ET.SubElement(entry, ans + 'content', type='text/html')
         ul   = ET.SubElement(cont, xns + 'ul')
-        ET.SubElement(ul, xns + 'li').text = 'Published: ' + d['datePublished']
+        ET.SubElement(ul, xns + 'li').text = 'Published: ' + d.get('datePublished', '')
         ET.SubElement(ul, xns + 'li').text = 'Director: ' + d.get('director', [{'name':''}])[0]['name']
         ET.SubElement(ul, xns + 'li').text = 'Genre: ' + ', '.join(d.get('genre', []))
         ET.SubElement(ul, xns + 'li').text = d.get('description', '')
