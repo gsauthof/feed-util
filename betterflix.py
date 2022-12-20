@@ -52,10 +52,19 @@ def parse_args():
     p.add_argument('--prime', action='store_true', help='query Amazon Prime instead of Netflix')
     p.add_argument('--thresh', '-t', type=decimal.Decimal, default=decimal.Decimal('6.5'),
                    help='IMDB average rating threshold for movies to be included, i.e. greater or equal (default: %(default)s)')
+    p.add_argument('--url', help='Expliclity specify a RSS source feed URL (default: Netflix or Prime, cf. --prime)')
     p.add_argument('--verbose', '-v', action='store_true',
                    help='Enable verbose (debug) logging')
     args     = p.parse_args()
-    args.tag = 'prime' if args.prime else 'netflix'
+    if args.url is None:
+        if args.prime:
+            args.url = wse_prime_url
+            args.tag = 'prime'
+        else:
+            args.url = wse_netflix_url
+            args.tag = 'netflix'
+    else:
+        args.tag = 'misc'
     return args
 
 
@@ -180,16 +189,14 @@ def write_feed_cache(cache_path, tag, d):
         json.dump(d, f, indent=4)
 
 wse_netflix_url = 'https://www.werstreamt.es/filme/anbieter-netflix/neu/?rss'
-wse_prime_url   = 'https://www.werstreamt.es/filme/anbieter-prime-video/neu/?rss'
+wse_prime_url   = 'https://www.werstreamt.es/filme/anbieter-prime-video/option-flatrate/neu/?rss'
 
 def read_wse_feed(args, c):
     h = read_feed_cache(args.cache, args.tag)
 
-    url = wse_prime_url if args.prime else wse_netflix_url
-
     if not args.debug:
-        unlink_cache(args.cache, url)
-    f  = cached_download(c, url, args.cache)
+        unlink_cache(args.cache, args.url)
+    f  = cached_download(c, args.url, args.cache)
     xs = parse_wse_feed(f)
     xs.reverse()
 
