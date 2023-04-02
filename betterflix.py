@@ -93,6 +93,7 @@ def download(c, url, filename):
     c.perform()
     code = c.getinfo(c.RESPONSE_CODE)
     if code != 200:
+        os.unlink(filename)
         raise RuntimeError(f'Downloading {url} failed: {code}')
     f.seek(0)
     return f
