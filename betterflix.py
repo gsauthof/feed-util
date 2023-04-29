@@ -140,6 +140,8 @@ def clean_cache(cache, protected_days=7):
 def parse_imdb_rating(s):
     root = html5lib.parse(s, default_treebuilder)
     es   = root.findall(f'.//{xns}script[@type="application/ld+json"]')
+    if not es:
+        return {}
     e    = es[0]
     d    = json.loads(e.text, parse_float=str)
     return d
@@ -209,12 +211,14 @@ def read_wse_feed(args, c):
         l = parse_imdb_link(f)
         if not l:
             log.debug(f'No IMDB link for: {x}')
+            unlink_cache(args.cache, x)
             continue
         f = cached_download(c, l, args.cache)
         d = parse_imdb_rating(f)
         if 'aggregateRating' in d:
             score = decimal.Decimal(d['aggregateRating']['ratingValue'])
         else:
+            unlink_cache(args.cache, l)
             score = decimal.Decimal(0)
 
         if score >= args.thresh:
