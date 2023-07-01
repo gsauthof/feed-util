@@ -236,6 +236,12 @@ def read_wse_feed(args, c):
 
     return h
 
+def normalize_imdb_url(url):
+    if url.startswith('https://'):
+        return url
+    else:
+        return 'https://www.imdb.com' + url
+
 
 def mk_feed(h, tag):
     feed = ET.Element(ans + 'feed')
@@ -244,7 +250,7 @@ def mk_feed(h, tag):
     ET.SubElement(feed, ans + 'id').text      = 'urn:uuid:98993562-02c3-4a77-bff4-aa79d471fea2'
     ET.SubElement(feed, ans + 'updated').text = h['mtime']
     for k, d in reversed(h['imdb'].items()):
-        url   = 'https://www.imdb.com' + d['url']
+        url   = normalize_imdb_url(d['url'])
         entry = ET.SubElement(feed, ans + 'entry')
         ET.SubElement(entry, ans + 'title').text   = f'{d["name"]} ({d["aggregateRating"]["ratingValue"]})'
         ET.SubElement(entry, ans + 'updated').text = d['mtime']
