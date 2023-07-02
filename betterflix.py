@@ -137,8 +137,7 @@ def clean_cache(cache, protected_days=7):
             os.remove(filename)
 
 
-def parse_imdb_rating(s):
-    root = html5lib.parse(s, default_treebuilder)
+def parse_imdb_rating(root):
     es   = root.findall(f'.//{xns}script[@type="application/ld+json"]')
     if not es:
         return {}
@@ -146,9 +145,29 @@ def parse_imdb_rating(s):
     d    = json.loads(e.text, parse_float=str)
     return d
 
+def parse_imdb_props(root):
+    es   = root.findall(f'.//{xns}script[@id="__NEXT_DATA__"]')
+    e    = es[0]
+    p    = json.loads(e.text, parse_float=str)
+    return p
 
-def parse_imdb_link(s):
+def parse_imdb_page(s):
     root = html5lib.parse(s, default_treebuilder)
+    d    = parse_imdb_rating(root)
+    p    = parse_imdb_props(root)
+    return d, p
+
+
+def parse_imdb_langs(h):
+    xs = []
+    ls = h['props']['pageProps']['mainColumnData']['spokenLanguages']['spokenLanguages']
+    for l in ls:
+        xs.append(l['id'])
+    return xs
+
+
+
+def parse_imdb_link(root):
     es  = root.findall(f'.//{xns}a[.="IMDb"]')
     if not es:
         return None
@@ -157,6 +176,31 @@ def parse_imdb_link(s):
     if not (l.startswith('http://www.imdb.com/') or l.startswith('https://www.imdb.com/')):
         raise RuntimeError(f'IMDB link links weirdly: {l}')
     return l
+
+
+def parse_wse_langs(root):
+    es = root.findall(f'.//{xns}div[@data-ext-provider-name="Prime Video"]')
+    e  = es[0]
+    fs = e.findall(f'.//{xns}div[@data-equalizer-watch=""]')
+    f  = fs[1]
+    ms = [ ('Deutsch', 'de'), ('Englisch', 'en'), ('Türkisch', 'tr') ]
+    for c in f:
+        if c.findall(f'.//{xns}i[@class="fi-check"]') and c.findall(f'.//{xns}small[.="Flatrate"]'):
+            ls = []
+            for t in c.findall(f'.//{xns}button')[0].itertext():
+                for k, v in ms:
+                    if k in t:
+                        ls.append(v)
+            return ls
+    return []
+
+def parse_wse_page(s, prime):
+    root = html5lib.parse(s, default_treebuilder)
+    l    = parse_imdb_link(root)
+    ls   = parse_wse_langs(root) if prime else []
+    return l, ls
+
+
 
 def parse_wse_feed(file):
     d = defusedxml.ElementTree.parse(file, forbid_dtd=True)
@@ -208,13 +252,13 @@ def read_wse_feed(args, c):
 
     for x in xs:
         f = cached_download(c, x, args.cache)
-        l = parse_imdb_link(f)
+        l, wse_langs = parse_wse_page(f, args.prime)
         if not l:
             log.debug(f'No IMDB link for: {x}')
             unlink_cache(args.cache, x)
             continue
         f = cached_download(c, l, args.cache)
-        d = parse_imdb_rating(f)
+        d, props = parse_imdb_page(f)
         if 'aggregateRating' in d:
             score = decimal.Decimal(d['aggregateRating']['ratingValue'])
         else:
@@ -222,6 +266,13 @@ def read_wse_feed(args, c):
             score = decimal.Decimal(0)
 
         if score >= args.thresh:
+            if args.prime:
+                imdb_langs = parse_imdb_langs(props)
+                log.debug(f'WSE Languages: {wse_langs}')
+                log.debug(f'IMDB Languages: {imdb_langs}')
+                if not set(wse_langs).intersection(imdb_langs):
+                    log.debug(f'Skipping {d["name"]} because non-OV audio')
+                    continue
             if d['url'] not in h['imdb']:
                 changed             = True
                 d['mtime']          = now_str
