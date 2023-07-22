@@ -178,12 +178,16 @@ def parse_imdb_link(root):
     return l
 
 
-def parse_wse_langs(root):
-    es = root.findall(f'.//{xns}div[@data-ext-provider-name="Prime Video"]')
+def parse_wse_langs(root, prime):
+    ps = 'Prime Video' if prime else 'Netflix'
+    es = root.findall(f'.//{xns}div[@data-ext-provider-name="{ps}"]')
     e  = es[0]
     fs = e.findall(f'.//{xns}div[@data-equalizer-watch=""]')
     f  = fs[1]
-    ms = [ ('Deutsch', 'de'), ('Englisch', 'en'), ('Türkisch', 'tr') ]
+    ms = [ ('Deutsch', 'de'), ('Englisch', 'en'), ('Türkisch', 'tr'),
+          ('Französisch', 'fr'), ('Italienisch', 'it'), ('Spanisch', 'es'),
+          ('Thailändisch', 'th'), ('Koreanisch', 'kr'), ('Indonesisch', 'id'),
+          ('Japanisch', 'jp') ]
     for c in f:
         if c.findall(f'.//{xns}i[@class="fi-check"]') and c.findall(f'.//{xns}small[.="Flatrate"]'):
             ls = []
@@ -197,7 +201,7 @@ def parse_wse_langs(root):
 def parse_wse_page(s, prime):
     root = html5lib.parse(s, default_treebuilder)
     l    = parse_imdb_link(root)
-    ls   = parse_wse_langs(root) if prime else []
+    ls   = parse_wse_langs(root, prime)
     return l, ls
 
 
@@ -266,13 +270,12 @@ def read_wse_feed(args, c):
             score = decimal.Decimal(0)
 
         if score >= args.thresh:
-            if args.prime:
-                imdb_langs = parse_imdb_langs(props)
-                log.debug(f'WSE Languages: {wse_langs}')
-                log.debug(f'IMDB Languages: {imdb_langs}')
-                if not set(wse_langs).intersection(imdb_langs):
-                    log.debug(f'Skipping {d["name"]} because non-OV audio')
-                    continue
+            imdb_langs = parse_imdb_langs(props)
+            log.debug(f'WSE Languages: {wse_langs}')
+            log.debug(f'IMDB Languages: {imdb_langs}')
+            if not set(wse_langs).intersection(imdb_langs):
+                log.debug(f'Skipping {d["name"]} because non-OV audio')
+                continue
             if d['url'] not in h['imdb']:
                 changed             = True
                 d['mtime']          = now_str
