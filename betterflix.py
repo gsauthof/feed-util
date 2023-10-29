@@ -160,9 +160,20 @@ def parse_imdb_page(s):
 
 def parse_imdb_langs(h):
     xs = []
-    ls = h['props']['pageProps']['mainColumnData']['spokenLanguages']['spokenLanguages']
+    langs = h['props']['pageProps']['mainColumnData']['spokenLanguages']
+    ls = langs['spokenLanguages'] if langs else []
     for l in ls:
         xs.append(l['id'])
+
+    # as of 2023, IMDB sometimes (?) also uses 'ko' for Korean, i.e.
+    # the WMO country code, although they use ISO 3166-1 alpha-2 codes
+    # elsewhere. See also:
+    # https://en.wikipedia.org/wiki/Country_codes:_J%E2%80%93K
+    # https://help.imdb.com/article/contribution/other-submission-guides/country-codes/G99K4LFRMSC37DCN#
+    # https://www.imdb.com/title/tt23902534/
+    if 'ko' in xs:
+        xs.append('kr')
+
     return xs
 
 
