@@ -1,15 +1,17 @@
 This repository contains news feed related utilities.
 
-- `heiser.py` - a program that augments
+- [`heiser.py`](#heiserpy) - a program that augments
   the heise.de news feed with content of the referenced articles
-- `lwn.py` - create an atom feed with content for lwn.net
+- [`lwn.py`](#lwnpy) - create an atom feed with content for lwn.net
   articles
 - `rss2atom.py` - convert an RSS 2 feed into an Atom one
   and deep copy the entry links as Atom content
 - `cast.py` - create a minimal audio-cast Atom feed via
   extracting the information from some HTML pages
-- `betterflix.py` - create atom feed of newly added Neflix/Prime
+- [`betterflix.py`](#betterflixpy) - create atom feed of newly added Neflix/Prime
   movies that don't have a poor IMDB score
+- [`castproxy.py`](#castproxypy) - aggregate multiple audiocasts (podcasts) into
+  a single Atom feed, optionally filtering each episode
 
 2017, Georg Sauthoff <mail@gms.tf>
 
@@ -129,8 +131,106 @@ web server such that your private feed is updated once a day,
 for consumption by a mobile device.
 
 
+## `castproxy.py`
+
+Castproxy aggregates multiple audiocasts (podcasts) into a single
+Atom feed, based on a TOML feed configuration file.
+
+It's killer feature is being able to configure a filter command
+that is applied to each episode.
+
+Such a filter can be used to convert weird audio formats,
+normalize the volume or cut certain crap out of the audio file.
+
+For example, integrating [cutbynoise][cutbynoise] - a
+audiocast/podcast [ad blocker][adblock], may look like this:
+
+```
+[[feed]]
+url = 'https://feeds.lagedernation.org/feeds/ldn-mp3.xml'
+name = 'Lage der Nation'
+short = 'ldn'
+limit = 3
+filter = [ 'cutbynoise', '-w', '-b', 'ldn-end.flac', '-v', '%src', '-o', '%dst' ]
+
+[[feed]]
+url = 'https://minkorrekt.podigee.io/feed/mp3'
+name = 'Methodisch Inkorrekt'
+short = 'mi'
+limit = 3
+filter = [ 'cutbynoise', '-w', '-b', 'mi-begin.flac', '-e', 'mi-end.flac', '-v', '%src', '-o', '%dst' ]
+```
+
+Such filtering is optional. Also, in case a filter fails, the
+original episode file is delivered.
+
+Besides the filtering, the aggregation can be useful, in its own
+right. For example, when the target client is running on a mobile
+device, only requesting an aggregated feed may save battery, save
+mobile bandwidth and increase feed refresh speed, in comparison
+to having to request each feed separately, from their sources.
+
+Also, such an aggregated feed may improve your privacy, as it
+limits tracking of your (mobile) IP connection and may block
+additional tracking and advertisement links in the HTML included
+in a feed.
+
+
+### Setup
+
+Castproxy is intended to run periodically, i.e. as a cron job or
+a systemd timer.
+
+Since it uses the fine [Configargparse][cargparse] package, its
+options can be placed in a configuration file, for clarity.
+A somewhat minimal example of such a configuration:
+
+```
+# NB: work directory needs to be on the same filesystem as the media directory
+work   = /path/to/tmp/dir
+feeds  = /path/to/feedcfg/castproxy.toml
+url    = https://example.org/somebase
+output = /srv/example.org/somebase/feed.xml
+media  = /srv/example.org/somebase/media
+```
+
+Cron job call:
+
+```
+/path/to/castproxy -c /path/to/castproxy.ini
+```
+
+### How it works
+
+Castproxy goes to some lengths to eliminate superfluous HTTP
+requests.  Thus, it keeps some state in its work directory (in
+JSON files) to store [ETag][etag] and last-modified header values for
+the next follow-up request.
+In that way, when a feed hasn't changed since the last request,
+the server can simply respond with HTTP 304 Not Modified and
+castproxy is saved from fetching and processing that feed,
+needlessly.
+
+Similarly, the aggregated feed (cf. `--output`) is only written
+when at least one of the sources did change. Hence, a downstream
+client that properly implements this protocol, also only ever
+updates the aggregated feed on real changes.
+
+To simplify the parsing of audiocast (podcast) feeds, which can
+be quite diverse to due to wild growth of RSS versions and
+podcast format extensions, castproxy relies on
+[feedparser][feedparser] for this task.
+
+In contrast, the aggregated output is just a minimal Atom
+conforming feed, generated directly using the Python
+[ElementTree][et] API.
+
+For all HTTP needs castproxy uses [pycurl][pycurl] and to
+normalize dates it relies on [dateutil][dateutil].
+
+
 [atom]: https://en.wikipedia.org/wiki/Atom_(standard)
-[et]: https://docs.python.org/3.5/library/xml.etree.elementtree.html
+[et]: https://docs.python.org/3/library/xml.etree.elementtree.html
 [html5lib]: https://github.com/html5lib/html5lib-python
 [requests]: http://docs.python-requests.org/en/master/
 [crontab]: https://en.wikipedia.org/wiki/Cron
@@ -138,4 +238,11 @@ for consumption by a mobile device.
 [rss]: https://en.wikipedia.org/wiki/RSS
 [wse]: https://www.werstreamt.es
 [imdb]: https://en.wikipedia.org/wiki/IMDb
+[cutbynoise]: https://github.com/gsauthof/cutbynoise
+[adblock]: https://en.wikipedia.org/wiki/Ad_blocking
+[cargparse]: https://github.com/bw2/ConfigArgParse
+[etag]: https://en.wikipedia.org/wiki/HTTP_ETag
+[feedparser]: https://github.com/kurtmckee/feedparser
+[pycurl]: http://pycurl.io/
+[dateutil]: https://github.com/dateutil/dateutil
 
