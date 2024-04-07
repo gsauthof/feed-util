@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import pycurl
+import re
 try:
     import selinux
     HAVE_SELINUX = True
@@ -80,17 +81,14 @@ def setup_curl(user_agent):
     curl.setopt(curl.XFERINFOFUNCTION, check_size)
 
 
-def mk_filename(shortname, e, href):
-    # we need to sanitize it since its remotely controlled input
-    # that could be used for injecting things ...
-    i = int(e.itunes_episode)
+def mk_filename(shortname, episode, href):
     k = href.rfind('?')
     if k != -1:
         href = href[:k]
     _, ext = os.path.splitext(href)
     if not ext:
         ext = '.mp3'
-    s = f'{shortname}{i}{ext}'
+    s = f'{shortname}{episode}{ext}'
     return s
 
 
@@ -152,6 +150,21 @@ def obtain(url, filename, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd=None)
         if HAVE_SELINUX:
             selinux.restorecon(dst)
 
+episode_ex = re.compile('#([0-9]+(\\.[0-9]+)?)')
+
+def get_episode(e):
+    # we need to sanitize it since its remotely controlled input
+    # that could be used for injecting things ...
+
+    if 'itunes_episode' in e:
+        s = f'#{e.itunes_episode}'
+    else:
+        s = e.title
+
+    m = episode_ex.search(s)
+    if m:
+        return m[1]
+
 
 def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd):
     if 'enclosures' not in e:
@@ -159,9 +172,12 @@ def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd
     m = e.enclosures[0]
     if not m.type.startswith('audio'):
         return
-    h = {}
-    fn = mk_filename(shortname, e, m.href)
+    episode = get_episode(e)
+    if episode is None:
+        return
+    fn = mk_filename(shortname, episode, m.href)
     obtain(m.href, fn, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd)
+    h = {}
     h['filename']  = fn
     h['alternate'] = [x for x in e.links if x.rel == 'alternate' and x.type.startswith('text')][0]
     h['title']     = e.title
@@ -169,7 +185,7 @@ def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd
     h['id']        = e.id
     h['published'] = e.published
     h['updated']   = e.updated
-    h['episode']   = int(e.itunes_episode)
+    h['episode']   = episode
     return h
 
 def refresh(name, shortname, url, limit, base_work_dir, media_dir, filter_cmd=None):
@@ -203,10 +219,12 @@ def refresh(name, shortname, url, limit, base_work_dir, media_dir, filter_cmd=No
         return False
 
     hs = []
-    for e in d.entries[:limit]:
+    for e in d.entries:
         h = refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd)
         if h:
             hs.append(h)
+        if len(hs) == limit:
+            break
 
     with open(f'{work_dir}/{shortname}.json', 'w') as f:
         json.dump(hs, f, indent=4)
