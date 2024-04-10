@@ -150,20 +150,28 @@ def obtain(url, filename, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd=None)
         if HAVE_SELINUX:
             selinux.restorecon(dst)
 
-episode_ex = re.compile('#([0-9]+(\\.[0-9]+)?)')
+episode_ex = re.compile('([0-9]+(\\.[0-9]+)?)')
 
 def get_episode(e):
     # we need to sanitize it since its remotely controlled input
     # that could be used for injecting things ...
 
     if 'itunes_episode' in e:
-        s = f'#{e.itunes_episode}'
+        s = str(e.itunes_episode)
     else:
         s = e.title
 
     m = episode_ex.search(s)
     if m:
         return m[1]
+
+
+def test_get_episode():
+    from feedparser.util import FeedParserDict as D
+    assert get_episode(D({'itunes_episode': 172})) == '172'
+    assert get_episode(D({'title': 'ad173 German Hacker'})) == '173'
+    assert get_episode(D({'title': '#216.5 - bläh blub foo'})) == '216.5'
+    assert get_episode(D({'title': '#97 NOT FOO BAR'})) == '97'+''
 
 
 def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd):
