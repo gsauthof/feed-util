@@ -165,13 +165,19 @@ def get_episode(e):
     if m:
         return m[1]
 
+    m = episode_ex.search(e.link)
+    if m:
+        return m[1]
+
+
 
 def test_get_episode():
     from feedparser.util import FeedParserDict as D
     assert get_episode(D({'itunes_episode': 172})) == '172'
     assert get_episode(D({'title': 'ad173 German Hacker'})) == '173'
     assert get_episode(D({'title': '#216.5 - bläh blub foo'})) == '216.5'
-    assert get_episode(D({'title': '#97 NOT FOO BAR'})) == '97'+''
+    assert get_episode(D({'title': '#97 NOT FOO BAR'})) == '97'
+    assert get_episode(D({'title': 'bli blah blub', 'link': 'https://example.org/147-bli-blah-blub</link>'})) == '147'
 
 
 def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd):
