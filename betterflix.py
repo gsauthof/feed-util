@@ -262,7 +262,7 @@ def read_wse_feed(args, c):
     xs = parse_wse_feed(f)
     xs.reverse()
 
-    now_str = datetime.datetime.utcnow().isoformat() + 'Z'
+    now_str = datetime.datetime.now(datetime.UTC).isoformat()[:-6] + 'Z'
     changed = False
 
     for x in xs:
