@@ -220,12 +220,12 @@ def gen_id(e):
     hex = h.hexdigest()
     return 'urn:sha256:' + hex
 
-now = datetime.datetime.utcnow()
+now = datetime.datetime.now(datetime.UTC)
 
 
 def updated(off=0):
     updated = ET.Element(ans + 'updated')
-    updated.text = (now - datetime.timedelta(hours=off)).isoformat() + 'Z'
+    updated.text = (now - datetime.timedelta(hours=off)).isoformat()[:-6] + 'Z'
     return updated
 
 

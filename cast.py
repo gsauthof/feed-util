@@ -16,7 +16,7 @@ ans = '{http://www.w3.org/2005/Atom}'
 xns = '{http://www.w3.org/1999/xhtml}'
 
 
-now = datetime.datetime.utcnow().isoformat()+'Z'
+now = datetime.datetime.now(datetime.UTC).isoformat()[:-6] + 'Z'
 updated = ET.Element(ans+'updated')
 updated.text = now
 

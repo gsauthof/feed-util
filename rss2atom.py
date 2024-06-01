@@ -164,11 +164,12 @@ def item2entry(item, url, use_description):
     update_urls(a, url)
   return entry
 
-now = datetime.datetime.utcnow()
+now = datetime.datetime.now(datetime.UTC)
+
 # shared with lwn.py
 def updated(off=0):
   updated = ET.Element(ans+'updated')
-  updated.text = (now - datetime.timedelta(hours=off)).isoformat()+'Z'
+  updated.text = (now - datetime.timedelta(hours=off)).isoformat()[:-6] + 'Z'
   return updated
 
 def rss2atom(rss_feed, url, use_description, n):
