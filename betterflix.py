@@ -237,11 +237,12 @@ def read_feed_cache(cache_path, tag):
     fn = f'{cache_path}/db-{tag}.json'
     if os.path.exists(fn):
         with open(fn) as f:
-            d = json.load(f, parse_float=str)
+            h = json.load(f, parse_float=str)
+            d = h.get('imdb')
             if len(d) > 50:
                 for k in list(d.keys())[:len(d)-50]:
                     del d[k]
-            return d
+            return h
     else:
         return { 'imdb': {} }
 
