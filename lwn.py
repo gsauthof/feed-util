@@ -86,7 +86,7 @@ def parse_args(*a):
 
 
 def parse_next(root):
-    link = next(filter(lambda x: x.text and x.text.startswith('Next '),
+    link = next(filter(lambda x: x.text and x.text.startswith('Next ') and x.text.endswith('items') and x.get('href').startswith('/Articles/?offset='),
                        root.iter(tag=xns + 'a')))
     # lol, as of Python 3.6 Element objects without children are false-ish ...
     if link is None:
