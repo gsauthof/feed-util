@@ -12,6 +12,7 @@ This repository contains news feed related utilities.
   movies that don't have a poor IMDB score
 - [`castproxy.py`](#castproxypy) - aggregate multiple audiocasts (podcasts) into
   a single Atom feed, optionally filtering each episode
+- [`estr.py`](#estr) - fetch the daily Euro short-term rate (€STR/ESTR)
 
 2017, Georg Sauthoff <mail@gms.tf>
 
@@ -227,6 +228,97 @@ conforming feed, generated directly using the Python
 
 For all HTTP needs castproxy uses [pycurl][pycurl] and to
 normalize dates it relies on [dateutil][dateutil].
+
+
+## ESTR
+
+The utility `estr.py` fetches the current [Euro short-term
+rate](https://www.ecb.europa.eu/stats/financial_markets_and_interest_rates/euro_short-term_rate/html/index.en.html)
+([€STR a.k.a. ESTR](https://en.wikipedia.org/wiki/%E2%82%ACSTR))
+from the European Central Bank.
+
+The ESTR is based on real money-market transactions between
+financial institutes. Building a local time-series over time can
+be handy for a couple a use cases:
+
+- Determining the spread between the ESTR and your [money market
+  account](https://en.wikipedia.org/wiki/Money_market_account)
+  interest rate.
+  In case it's too high it may be a sign that you want to
+  complain to your bank and look for alternatives.
+- Checking that an investment in an ETF that tracks the ESTR
+  still makes sense.
+
+An ETF that tracks the ESTR (such as
+[FR0010510800](https://isin.toolforge.org/?isin=FR0010510800) or
+[LU0290358497](https://isin.toolforge.org/?isin=LU0290358497))
+can be seen as an alternative to a traditional money market
+account (MMA, German: Tagesgeldkonto) your bank offers.
+Where banks often calculate relatively high costs for MMAs (e.g. 0.8 %
+to 2.9 % when the ESTR is at 3.4 %), the example ETFs
+only have a cost rate of 0.1 %.
+
+While European MMAs are part of the mandatory and
+state-guaranteed [deposit insurance
+system](https://en.wikipedia.org/wiki/Deposit_insurance) (up to
+100k € per customer per bank, basically), the fund assets have
+special protection (that is not limited to 100k €!) if the issuer
+collapses.
+
+Technically, with an ETF, there is a tiny risk that a fraudulent
+broker scams you out of your shares, and then the German bank
+regulation safety net might limit compensation to [20k € per
+person](https://de.wikipedia.org/wiki/Anlegerentsch%C3%A4digungsgesetz).
+Also, although the kind of
+[swaps](https://en.wikipedia.org/wiki/Swap_(finance)) used by an
+ESTR tracking ETF is considered low risk by many, incompetent
+fund management could still screw up big time, internal and
+external control could fail at the same time and/or fund
+management could deceive the public and regulators, given enough
+criminal energy is available.
+However, the probability of something like this may be relatively
+tiny in comparison to other bad things that might happen to you.
+
+As the ESTR approaches and crosses the inflation rate one may
+want to reevaluate and reconsider any investments into ESTR
+tracking ETFs.
+
+
+### Usage Examples
+
+Fetch last ESTR and print in CSV format:
+
+```
+./estr.py --csv
+ref_date,pub_date,rate,initial_volume,number_banks,number_trnx,sh_vol_top_banks,pub_mode,vol_dist_25,vol_dist_75,pub_type
+2024-10-03,2024-10-04,3.407,37573,31,497,58,Normal,3.39,3.43,Standard
+```
+
+Generate create statement for a table of ESTR data:
+
+```
+./estr.py --create
+CREATE TABLE estr (
+    ref_date         timestamp PRIMARY KEY,
+    pub_date         timestamp,
+    rate             decimal,
+    initial_volume   bigint,
+    number_banks     bigint,
+    number_trnx      bigint,
+    sh_vol_top_banks bigint,
+    pub_mode         varchar(14),
+    vol_dist_25      decimal,
+    vol_dist_75      decimal,
+    pub_type         varchar(14)
+);
+```
+
+Command you can put into a cron job that imports the last ESTR on
+each work day:
+
+```
+psql -d mydb --no-psqlrc --quiet --echo-errors -c "$(/usr/local/bin/estr --sql)"
+```
 
 
 [atom]: https://en.wikipedia.org/wiki/Atom_(standard)
