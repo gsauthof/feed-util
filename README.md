@@ -238,7 +238,7 @@ rate](https://www.ecb.europa.eu/stats/financial_markets_and_interest_rates/euro_
 from the European Central Bank.
 
 The ESTR is based on real money-market transactions between
-financial institutes. Building a local time-series over time can
+financial institutions. Building a local time-series over time can
 be handy for a couple a use cases:
 
 - Determining the spread between the ESTR and your [money market
