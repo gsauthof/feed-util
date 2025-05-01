@@ -314,6 +314,7 @@ def main():
         d = ET.ElementTree(ET.fromstring(get_resource(args.feed_url, session)))
     replace_content(d.getroot(), session, cache=args.cache)
     remove_entries(d.getroot(), args.filter)
+    ET.indent(d, space='    ')
     log.info('Writing augmented feed to: ' + args.output)
     d.write(args.output)
 
