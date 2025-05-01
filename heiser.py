@@ -255,10 +255,17 @@ def extract_article(link, ident, cache, session):
     return (a, author)
 
 def replace_content(root, session, cache='./cache'):
-    for entry in root.iter(ans + 'entry'):
+    xs = []
+    for entry, stack in stack_iter(root):
+        if entry.tag != ans+'entry':
+            continue
         link = entry.find(ans + 'link')
         href = link.get('href')
         ident = entry.find(ans + 'id')
+        if '/bestenlisten/' in href:
+            log.debug(f'Removing {href} because TechStage')
+            xs.append( (stack[-2], entry) )
+            continue
         log.debug('Inserting {} (ID: {})'.format(href, ident.text))
         try:
             (article, author_s) = extract_article(href, ident.text, cache, session)
@@ -281,6 +288,8 @@ def replace_content(root, session, cache='./cache'):
         author_name = ET.SubElement(author, ans + 'name')
         author_name.text = author_s
         entry.insert(i, author)
+    for parent, e in xs:
+        parent.remove(e)
 
 def clean_cache(cache, protected_days=7):
     for fn in os.listdir(cache):
@@ -303,7 +312,7 @@ def main():
         d = ET.parse(args.feed)
     else:
         d = ET.ElementTree(ET.fromstring(get_resource(args.feed_url, session)))
-    replace_content(d, session, cache=args.cache)
+    replace_content(d.getroot(), session, cache=args.cache)
     remove_entries(d.getroot(), args.filter)
     log.info('Writing augmented feed to: ' + args.output)
     d.write(args.output)
