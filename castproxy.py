@@ -81,14 +81,18 @@ def setup_curl(user_agent):
     curl.setopt(curl.XFERINFOFUNCTION, check_size)
 
 
-def mk_filename(shortname, episode, href):
+def mk_filename(shortname, episode, href, date_str):
     k = href.rfind('?')
     if k != -1:
         href = href[:k]
     _, ext = os.path.splitext(href)
     if not ext:
         ext = '.mp3'
-    s = f'{shortname}{episode}{ext}'
+    if episode:
+        m = episode
+    else:
+        m = date_str
+    s = f'{shortname}{m}{ext}'
     return s
 
 
@@ -187,9 +191,7 @@ def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd
     if not m.type.startswith('audio'):
         return
     episode = get_episode(e)
-    if episode is None:
-        return
-    fn = mk_filename(shortname, episode, m.href)
+    fn = mk_filename(shortname, episode, m.href, normalize_date(e.published))
     obtain(m.href, fn, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd)
     h = {}
     h['filename']  = fn
@@ -199,7 +201,8 @@ def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd
     h['id']        = e.id
     h['published'] = e.published
     h['updated']   = e.updated
-    h['episode']   = episode
+    if episode:
+        h['episode']   = episode
     return h
 
 def refresh(name, shortname, url, limit, base_work_dir, media_dir, filter_cmd=None):
@@ -258,7 +261,7 @@ def normalize_date(s):
     return d.isoformat(timespec='seconds')
 
 
-def mk_entries(shortname, url, base_work_dir):
+def mk_entries(shortname, name, url, base_work_dir):
     fn = f'{base_work_dir}/{shortname}/{shortname}.json'
     log.debug(f'Reading {fn} ...')
     with open(fn) as f:
@@ -270,8 +273,11 @@ def mk_entries(shortname, url, base_work_dir):
         ET.SubElement(e, ans+'title').text = h['title']
         ET.SubElement(e, ans+'updated').text = normalize_date(h['updated'])
         ET.SubElement(e, ans+'published').text = normalize_date(h['published'])
-        episode = h['episode']
-        ET.SubElement(e, ans+'content').text = f'Episode {episode}'
+        c = ET.SubElement(e, ans+'content')
+        c.text = name
+        if 'episode' in h:
+            episode = h['episode']
+            c.text += f' - Episode {episode}'
         ET.SubElement(e, ans+'link', rel='alternate', type=h['alternate']['type'], href=h['alternate']['href'])
         m = h['enclosure']
         fn = h['filename']
@@ -287,8 +293,8 @@ def mk_feed(url, title, shortnames, base_work_dir):
     ET.SubElement(feed, ans+'title').text = title
     ET.SubElement(feed, ans+'id').text = url
     ET.SubElement(feed, ans+'updated').text = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
-    for sn in shortnames:
-        feed.extend(mk_entries(sn, url, base_work_dir))
+    for sn, name in shortnames:
+        feed.extend(mk_entries(sn, name, url, base_work_dir))
     return ET.ElementTree(feed)
 
 
@@ -309,7 +315,7 @@ def main():
     for feed in feeds['feed']:
         a = refresh(feed['name'], feed['short'], feed['url'], feed['limit'], args.work, args.media, feed.get('filter'))
         b = b or a
-        sns.append(feed['short'])
+        sns.append((feed['short'], feed['name']))
 
     if not b:
         log.info('No source feed changed - done')
