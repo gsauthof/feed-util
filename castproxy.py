@@ -195,7 +195,9 @@ def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd
     obtain(m.href, fn, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd)
     h = {}
     h['filename']  = fn
-    h['alternate'] = [x for x in e.links if x.rel == 'alternate' and x.type.startswith('text')][0]
+    alts = [x for x in e.links if x.rel == 'alternate' and x.type.startswith('text')]
+    if alts:
+        h['alternate'] = alts[0]
     h['title']     = e.title
     h['enclosure'] = m
     h['id']        = e.id
@@ -278,7 +280,8 @@ def mk_entries(shortname, name, url, base_work_dir):
         if 'episode' in h:
             episode = h['episode']
             c.text += f' - Episode {episode}'
-        ET.SubElement(e, ans+'link', rel='alternate', type=h['alternate']['type'], href=h['alternate']['href'])
+        if 'alternate' in h:
+            ET.SubElement(e, ans+'link', rel='alternate', type=h['alternate']['type'], href=h['alternate']['href'])
         m = h['enclosure']
         fn = h['filename']
         # apparently, at least some podcast clients don't understand relative URLs in enclosures
