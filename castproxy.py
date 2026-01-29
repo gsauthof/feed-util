@@ -233,6 +233,10 @@ def refresh(name, shortname, url, limit, base_work_dir, media_dir, filter_cmd=No
         paras['etag'] = state['etag']
 
     d = feedparser.parse(url, **paras)
+    if 'status' not in d:
+        x = d.bozo_exception if 'bozo_exception' in d else None
+        log.warning(f'Skipping {shortname} because parse without status {x}')
+        return False
     if d.status == 304:
         log.debug(f'Skipping {shortname} because feed not modified')
         return False
