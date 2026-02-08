@@ -81,17 +81,14 @@ def setup_curl(user_agent):
     curl.setopt(curl.XFERINFOFUNCTION, check_size)
 
 
-def mk_filename(shortname, episode, href, date_str):
+def mk_filename(shortname, episode, href):
     k = href.rfind('?')
     if k != -1:
         href = href[:k]
     _, ext = os.path.splitext(href)
     if not ext:
         ext = '.mp3'
-    if episode:
-        m = episode
-    else:
-        m = date_str
+    m = episode
     s = f'{shortname}{m}{ext}'
     return s
 
@@ -169,9 +166,12 @@ def get_episode(e):
     if m:
         return m[1]
 
-    m = episode_ex.search(e.link)
-    if m:
-        return m[1]
+    if 'link' in e:
+        m = episode_ex.search(e.link)
+        if m:
+            return m[1]
+
+    return normalize_date(e.published)
 
 
 
@@ -184,14 +184,21 @@ def test_get_episode():
     assert get_episode(D({'title': 'bli blah blub', 'link': 'https://example.org/147-bli-blah-blub</link>'})) == '147'
 
 
-def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd):
+def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd, eps):
     if 'enclosures' not in e:
         return
     m = e.enclosures[0]
     if not m.type.startswith('audio'):
         return
     episode = get_episode(e)
-    fn = mk_filename(shortname, episode, m.href, normalize_date(e.published))
+    if episode in eps:
+        t = f'{episode}.{eps[episode]}'
+        eps[episode] += 1
+        episode = t
+    else:
+        eps[episode] = 2
+
+    fn = mk_filename(shortname, episode, m.href)
     obtain(m.href, fn, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd)
     h = {}
     h['filename']  = fn
@@ -203,8 +210,7 @@ def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd
     h['id']        = e.id
     h['published'] = e.published
     h['updated']   = e.updated
-    if episode:
-        h['episode']   = episode
+    h['episode']   = episode
     return h
 
 def refresh(name, shortname, url, limit, base_work_dir, media_dir, filter_cmd=None):
@@ -242,8 +248,10 @@ def refresh(name, shortname, url, limit, base_work_dir, media_dir, filter_cmd=No
         return False
 
     hs = []
+    eps = {}
     for e in d.entries:
-        h = refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd)
+        h = refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd, eps)
+
         if h:
             hs.append(h)
         if len(hs) == limit:
