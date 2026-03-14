@@ -121,7 +121,9 @@ def parse_headlines(root):
         elif e.tag == xns+'div' and klasse == 'BlurbListing' and last_headline is not None:
             headline_str = ' '.join(last_headline.itertext())
             link = next(map(lambda x: x.get('href'),
-                            filter(lambda x: x.text == 'Full Story', e.iter(xns + 'a'))), None)
+                            filter(lambda x: x.text == 'Full Story' or (x.text is not None and x.text.startswith('Comments')), e.iter(xns + 'a'))), None)
+            if link.endswith('#Comments'):
+                link = link[:-9]
             log.debug('Full story link for {}: {}'.format(headline_str,
                                                           (link if link else 'None')))
             rs.append([headline_str, norm_comment(e), link])
