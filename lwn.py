@@ -266,7 +266,14 @@ def remove_header(a):
     header = a.find(xns + 'center')
     if header and header.find(xns + 'table'):
         a.remove(header)
-    return a
+
+def remove_comments(e):
+    ds = []
+    for x in e:
+        if ds or x.tag == f'{xns}form':
+            ds.append(x)
+    for x in ds:
+        e.remove(x)
 
 
 def test_well_form_anchors():
@@ -328,7 +335,10 @@ def resolve_articles(rs, args, session):
         d = html5lib.parse(a, default_treebuilder)
         divs = d.findall('.//' + xns + 'div[@class="ArticleText"]')
         if divs:
-            r[1] = remove_header(divs[0])
+            x = divs[0]
+            remove_header(x)
+            remove_comments(x)
+            r[1] = x
 
 
 def get_ids(t):
