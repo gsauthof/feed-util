@@ -388,8 +388,6 @@ def write_feed(f, args):
     else:
         log.debug('Writing {} ...'.format(args.output))
         f.write(args.output)
-    # only works with lxml - kind of - still looks ugly
-    #f.write(args.output, pretty_print=True)
 
 
 def main(args):
