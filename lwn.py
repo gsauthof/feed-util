@@ -274,19 +274,9 @@ points&quot; (OPPs). These were explained in detail in
     d = html5lib.parse(inp)
     a = d.findall('./' + xns + 'body/' + xns + 'p/' + xns + 'a')[0]
     assert sorted(a.attrib.keys()) == ['<', 'a', 'href']
-    well_form_anchors(d)
+    sanitize_tree(d)
     a = d.findall('./' + xns + 'body/' + xns + 'p/' + xns + 'a')[0]
     assert sorted(a.attrib.keys()) == ['href']
-
-
-def well_form_anchors(tree):
-    for a in tree.iter(tag=xns + 'a'):
-        keys = list(a.attrib.keys())
-        for key in keys:
-            if key not in set(('href', 'name', 'rel', 'rev', 'urn', 'title',
-                               'methods', 'id', 'download', 'hreflang', 'ping', 'referrerpolicy',
-                               'target', 'type')):
-                a.attrib.pop(key)
 
 
 def test_well_form_attrs():
@@ -304,7 +294,7 @@ so far.
     d = html5lib.parse(inp)
     a = d.findall('./' + xns + 'body/' + xns + 'br')[0]
     assert sorted(a.attrib.keys()) == ['<p', 'clear']
-    well_form_attrs(d)
+    sanitize_tree(d)
     a = d.findall('./' + xns + 'body/' + xns + 'br')[0]
     assert sorted(a.attrib.keys()) == ['clear']
 
@@ -319,17 +309,9 @@ title="Julien Desfossez, Vineeth Remanan Pillai", class="lthumb"></a>
     d = html5lib.parse(inp)
     a = d.findall('./' + xns + 'body/' + xns + 'a/' + xns + 'img')[0]
     assert sorted(a.attrib.keys()) == [',', 'alt', 'class', 'src', 'title']
-    well_form_attrs(d)
+    sanitize_tree(d)
     a = d.findall('./' + xns + 'body/' + xns + 'a/' + xns + 'img')[0]
     assert sorted(a.attrib.keys()) == ['alt', 'class', 'src', 'title']
-
-
-def well_form_attrs(tree):
-    for a in tree.iter():
-        keys = list(a.attrib.keys())
-        for key in keys:
-            if key and key[0] in ('<', ','):
-                a.attrib.pop(key)
 
 
 def resolve_articles(rs, args, session):
@@ -342,8 +324,6 @@ def resolve_articles(rs, args, session):
         divs = d.findall('.//' + xns + 'div[@class="ArticleText"]')
         if divs:
             r[1] = remove_header(divs[0])
-            well_form_anchors(r[1])
-            well_form_attrs(r[1])
 
 
 def get_ids(t):
@@ -359,6 +339,44 @@ def get_ids_f(filename):
     r = get_ids(t)
     log.debug('Found existing IDs: ' + str(r))
     return r
+
+
+att_name_re = re.compile('^[A-Za-z:_][A-Za-z0-9:_.-]+$')
+
+def sanitize_tree(t):
+    # NB: not necessary, as ElementTree also has iter() method
+    # d = t.getroot()
+    a_attrs = set(('href', 'name', 'rel', 'rev', 'urn', 'title',
+                   'methods', 'id', 'download', 'hreflang', 'ping', 'referrerpolicy',
+                   'target', 'type'))
+    a_tag = xns + 'a'
+    for e in t.iter():
+        ds = []
+        for k in e.attrib.keys():
+            if not att_name_re.match(k):
+                ds.append(k)
+            elif e.tag == a_tag and k not in a_attrs:
+                ds.append(k)
+        for x in ds:
+            del e.attrib[x]
+
+
+# cf. tests above test_well_form_anchors(), test_well_form_attrs* tests
+def test_img_invalid():
+    inp = '''
+<blockquote>
+<img src="https://static.lwn.net/images/2026/2026-classical-freedoms.png" class="photo" border="0"
+alt="[Slide: "Classical freedoms must remain mobile"]"
+title="Slide: "Classical freedoms must remain mobile" border="0"/>
+</blockquote>
+'''
+    d = html5lib.parse(inp)
+    a = list(d.findall('.//' + xns + 'img')[0].attrib.keys())
+    a.sort()
+    assert a == ['alt', 'border', 'class', 'classical', 'freedoms', 'mobile"', 'mobile"]"', 'must', 'remain', 'src', 'title']
+    sanitize_tree(d)
+    a = list(d.findall('.//' + xns + 'img')[0].attrib.keys())
+    assert a == ['src', 'class', 'border', 'alt', 'classical', 'freedoms', 'must', 'remain', 'title']
 
 
 def write_feed(f, args):
@@ -390,6 +408,8 @@ def main(args):
             url = 'https://lwn.net' + r[1]
         resolve_articles(rs, args, session)
     f = mk_feed(rs, args)
+    sanitize_tree(f)
+    ET.indent(f, space='    ')
     update_urls(f, 'https://lwn.net')
     write_feed(f, args)
 
