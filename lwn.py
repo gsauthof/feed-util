@@ -60,6 +60,8 @@ def mk_arg_parser():
                    help="force feed writing - even if is hasn't changed")
     p.add_argument('--no-default', action='store_true',
                    help="don't write default namespace")
+    p.add_argument('--all', action='store_true',
+                   help="don't filter headlines")
     return p
 
 
@@ -120,6 +122,7 @@ def parse_headlines(root):
                 last_headline = e
         elif e.tag == xns+'div' and klasse == 'BlurbListing' and last_headline is not None:
             headline_str = ' '.join(last_headline.itertext())
+            headline_str = headline_str.strip()
             link = next(map(lambda x: x.get('href'),
                             filter(lambda x: x.text == 'Full Story' or (x.text is not None and x.text.startswith('Comments')), e.iter(xns + 'a'))), None)
             if link.endswith('#Comments'):
@@ -390,23 +393,27 @@ def write_feed(f, args):
         f.write(args.output)
 
 
+def filter_headlines(rs):
+    ys = [ x for x in rs if not (x[0].startswith('Stable kernels for ') or x[0].startswith('Kernel prepatch ') or x[0].startswith('Security updates for ')) ]
+    return ys
+
+
 def main(args):
     rs = []
+    session = requests.Session()
     if args.input:
         for i in args.input:
             rs += parse_headlines_f(i)[0]
-
-        session = requests.Session()
-        resolve_articles(rs, args, session)
     else:
-        session = requests.Session()
         url = args.url
         for _ in range(args.n):
             s = get_resource(url, session)
             r = parse_headlines_s(s)
             rs += r[0]
             url = 'https://lwn.net' + r[1]
-        resolve_articles(rs, args, session)
+    if not args.all:
+        rs = filter_headlines(rs)
+    resolve_articles(rs, args, session)
     f = mk_feed(rs, args)
     sanitize_tree(f)
     ET.indent(f, space='    ')
