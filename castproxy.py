@@ -151,14 +151,14 @@ def obtain(url, filename, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd=None)
         if HAVE_SELINUX:
             selinux.restorecon(dst)
 
-episode_ex = re.compile('([0-9]+(\\.[0-9]+)?)')
+episode_ex = re.compile('([0-9]+(\\.[0-9]+)?)[ -]')
 
 def get_episode(e):
     # we need to sanitize it since its remotely controlled input
     # that could be used for injecting things ...
 
     if 'itunes_episode' in e:
-        s = str(e.itunes_episode)
+        s = str(e.itunes_episode) + ' '
     else:
         s = e.title
 
@@ -182,6 +182,7 @@ def test_get_episode():
     assert get_episode(D({'title': '#216.5 - bläh blub foo'})) == '216.5'
     assert get_episode(D({'title': '#97 NOT FOO BAR'})) == '97'
     assert get_episode(D({'title': 'bli blah blub', 'link': 'https://example.org/147-bli-blah-blub</link>'})) == '147'
+    assert get_episode(D({'title': 'Too Coffee to Fail', 'link': 'https://example.org/path/to/6a14180156c4d991960775e4db5d4aaa', 'published': 'Sat, 01 Aug 2026 04:00:00 GMT'})) == '2026-08-01T04:00:00+00:00'
 
 
 def refresh_entry(e, shortname, tmp_dir, new_dir, cur_dir, media_dir, filter_cmd, eps):
